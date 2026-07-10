@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPS Harapan Siswa - Media Pembelajaran Mandiri</title>
+    
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM CDN (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel CDN (For JSX compilation in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom animations & perspectives for 3D flashcards */
+        .perspective {
+            perspective: 1000px;
+        }
+        /* Custom scrollbar for glossary */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <!-- Mounting point for React App -->
+    <div id="root"></div>
+
+    <!-- React Code starts here -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 1. DATA DATABASE IPS OFFLINE
+        const IPS_SUBJECTS = [
+            {
+                id: "sosiologi",
+                name: "Sosiologi",
+                icon: "users",
+                headerColor: "bg-purple-600",
+                topics: [
+                    {
+                        id: "interaksi-sosial",
+                        title: "Pengantar Interaksi Sosial di Masyarakat",
+                        duration: "10 Menit",
+                        content: [
+                            "Interaksi sosial adalah hubungan timbal balik yang dinamis antara individu dengan individu, individu dengan kelompok, maupun kelompok dengan kelompok lain di dalam masyarakat. Menurut sosiolog, manusia adalah makhluk 'Zoon Politikon' yang artinya tidak dapat hidup sendiri tanpa bantuan orang lain.",
+                            "Syarat terjadinya interaksi sosial yang sah ada dua, yaitu Kontak Sosial dan Komunikasi. Kontak sosial dapat berupa kontak fisik langsung maupun tidak langsung lewat media perantara. Sedangkan komunikasi berarti adanya pengiriman pesan dari komunikator yang dapat dipahami maknanya secara jelas oleh komunikan.",
+                            "Proses interaksi sosial terbagi menjadi dua sifat utama, yaitu Asosiatif (mengarah pada persatuan dan kerja sama, seperti asimilasi, akomodasi, dan gotong royong) serta Disosiatif (mengarah pada konflik, kompetisi, dan pertikaian di lingkungan sosial)."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah syarat utama agar suatu hubungan sosial dapat disebut sebagai interaksi sosial?",
+                                options: [
+                                    "Adanya kontak sosial dan adanya proses komunikasi yang saling dipahami",
+                                    "Kedua belah pihak harus memiliki status sosial dan ekonomi yang sama",
+                                    "Pertemuan secara langsung secara fisik di satu lokasi geografis",
+                                    "Adanya pembagian keuntungan finansial yang merata"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Syarat mutlak interaksi sosial dalam sosiologi adalah kontak sosial (hubungan awal) dan komunikasi (penyampaian pesan yang dipahami)."
+                            },
+                            {
+                                question: "Manakah di bawah ini yang merupakan contoh proses interaksi sosial asosiatif?",
+                                options: [
+                                    "Persaingan perebutan piala juara kelas",
+                                    "Gotong royong warga membersihkan saluran air lingkungan",
+                                    "Kontravensi terselubung antar pengurus kelas",
+                                    "Pertikaian fisik memperebutkan wilayah parkir"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Gotong royong adalah bentuk kerja sama (akomodasi/asosiatif) yang mendorong integrasi dan kerukunan warga."
+                            },
+                            {
+                                question: "Apa arti istilah 'Zoon Politikon' yang dikemukakan Aristoteles?",
+                                options: [
+                                    "Manusia adalah makhluk yang takut perubahan sosial",
+                                    "Manusia adalah makhluk yang tidak suka bergaul",
+                                    "Manusia pada kodratnya adalah makhluk sosial yang selalu hidup bermasyarakat",
+                                    "Manusia adalah penguasa mutlak rantai makanan ekosistem"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Zoon Politikon merujuk pada kodrat manusia sebagai makhluk sosial yang selalu membutuhkan orang lain dan hidup dalam kelompok."
+                            }
+                        ]
+                    },
+                    {
+                        id: "nilai-norma-sosial",
+                        title: "Eksplorasi Nilai dan Norma Sosial",
+                        duration: "12 Menit",
+                        content: [
+                            "Nilai sosial adalah konsepsi abstrak tentang apa yang dianggap baik, berharga, dan diinginkan oleh masyarakat. Sedangkan Norma Sosial adalah aturan nyata berupa perintah dan larangan yang mengikat anggota masyarakat agar nilai-nilai luhur tersebut dapat berjalan dalam kehidupan sehari-hari.",
+                            "Berdasarkan daya ikatnya di masyarakat, norma sosial dibagi menjadi empat tingkatan hierarki dari yang terlemah hingga terkuat: Cara (Usage), Kebiasaan (Folkways), Tata Kelakuan (Mores), dan Adat Istiadat (Customs).",
+                            "Melanggar norma tingkat 'Cara' seperti bersendawa kencang saat makan biasanya hanya akan mendapat cemoohan ringan. Namun, melanggar norma tingkat 'Adat Istiadat' dapat mendatangkan denda adat besar, pengucilan sosial, hingga sanksi moral luar biasa dari seluruh warga."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah perbedaan mendasar antara Nilai Sosial dan Norma Sosial?",
+                                options: [
+                                    "Nilai sosial bersifat memaksa sedangkan norma sosial bersifat sukarela",
+                                    "Nilai adalah pedoman abstrak tentang apa yang baik, sedangkan norma adalah aturan nyata dengan sanksi pengikat",
+                                    "Norma sosial diciptakan oleh pemerintah sedangkan nilai dibuat oleh kepala suku",
+                                    "Nilai sosial hanya berlaku untuk orang dewasa saja"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Nilai adalah gagasan atau konsep ideal (misal: kejujuran), sedangkan norma adalah aturan konkret untuk menegakkan nilai tersebut (misal: dilarang menyontek saat kuis)."
+                            },
+                            {
+                                question: "Norma yang memiliki daya ikat paling kuat dan turun-temurun di dalam masyarakat sosiologi disebut...",
+                                options: [
+                                    "Cara (Usage)",
+                                    "Kebiasaan (Folkways)",
+                                    "Adat Istiadat (Customs)",
+                                    "Tata Kelakuan (Mores)"
+                                ]
+                                ,
+                                correctAnswer: 2,
+                                explanation: "Adat Istiadat (Customs) adalah norma dengan kekuatan sanksi adat paling berat, sakral, dan mengikat anggota komunitasnya secara turun-temurun."
+                            },
+                            {
+                                question: "Membungkukkan badan saat berjalan melewati guru atau orang tua merupakan pelanggaran norma tingkat apa jika diabaikan?",
+                                options: [
+                                    "Kebiasaan (Folkways)",
+                                    "Adat Istiadat (Customs)",
+                                    "Hukum formal tertulis",
+                                    "Tata kelakuan resmi"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Menghormati orang yang lebih tua dengan membungkuk adalah bagian dari Kebiasaan (Folkways) yang dianggap sopan dan berulang-ulang di masyarakat Indonesia."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "geografi",
+                name: "Geografi",
+                icon: "globe",
+                headerColor: "bg-teal-600",
+                topics: [
+                    {
+                        id: "peta-penginderaan-jauh",
+                        title: "Peta, Citra Satelit, dan Penginderaan Jauh",
+                        duration: "15 Menit",
+                        content: [
+                            "Penginderaan Jauh (Remote Sensing) adalah seni dan ilmu untuk memperoleh data informasi suatu objek di permukaan bumi dari jarak jauh tanpa menyentuh fisik objek secara langsung. Alat perekam ini biasanya dipasang pada balon udara, pesawat terbang, drone, atau satelit luar angkasa.",
+                            "Sistem ini bekerja dengan memanfaatkan pantulan gelombang elektromagnetik dari sumber tenaga (seperti cahaya matahari) yang dipantulkan kembali oleh permukaan tanah, vegetasi hutan, atau permukaan air sungai. Pantulan energi ini kemudian direkam oleh sensor satelit dan diolah komputer menjadi data visual bernama Citra Satelit.",
+                            "Bagi siswa vokasi, ilmu pemetaan dan penginderaan jauh sangat penting dalam menganalisis tata ruang wilayah, memetakan potensi bencana geologi, memantau kawasan industri, hingga navigasi transportasi logistik modern berbasis koordinat GPS."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah yang dimaksud dengan Citra Satelit dalam penginderaan jauh?",
+                                options: [
+                                    "Gambar lukisan manual tentang permukaan bumi",
+                                    "Hasil rekaman visual permukaan bumi berupa foto digital yang ditangkap oleh sensor satelit luar angkasa",
+                                    "Peta topografi kuno yang digambar di atas kulit hewan",
+                                    "Sinyal radio frekuensi tinggi dari menara pemancar bumi"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Citra Satelit adalah representasi visual permukaan bumi yang dihasilkan dari sensor satelit yang mengorbit bumi."
+                            },
+                            {
+                                question: "Manakah yang merupakan fungsi utama dari Skala Peta?",
+                                options: [
+                                    "Menentukan warna keindahan peta",
+                                    "Sebagai rasio perbandingan jarak pada lembar kertas peta dengan jarak sesungguhnya di lapangan permukaan bumi",
+                                    "Menunjukkan arah mata angin utara",
+                                    "Menghitung jumlah penduduk di wilayah pemetaan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Skala peta (contoh: 1:100.000) adalah rasio matematis yang membandingkan jarak di kertas peta dengan jarak riil di lapangan."
+                            },
+                            {
+                                question: "Sumber tenaga alami yang paling utama digunakan dalam sistem penginderaan jauh pasif adalah...",
+                                options: [
+                                    "Lampu sorot laser berkekuatan tinggi",
+                                    "Pancaran gelombang mikro buatan satelit",
+                                    "Radiasi energi cahaya matahari",
+                                    "Panas bumi geothermal"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Sistem penginderaan jauh pasif mengandalkan energi alami pantulan sinar matahari pada siang hari."
+                            }
+                        ]
+                    },
+                    {
+                        id: "langkah-penelitian-geografi",
+                        title: "Metodologi & Langkah Penelitian Geografi",
+                        duration: "12 Menit",
+                        content: [
+                            "Penelitian geografi memiliki karakteristik khas yang membedakannya dengan sains lainnya, yaitu fokus pada tiga pendekatan utama: Pendekatan Spasial (keruangan), Pendekatan Ekologis (lingkungan hidup), dan Pendekatan Kompleks Wilayah (kombinasi keduanya).",
+                            "Langkah awal penelitian dimulai dengan merumuskan masalah konkrit di geosfer, seperti longsor lahan di kawasan puncak Bogor, polusi udara perkotaan, atau banjir luapan sungai Ciliwung. Selanjutnya, peneliti menyusun hipotesis ilmiah dan melakukan pengumpulan data.",
+                            "Pengumpulan data geografi wajib mengombinasikan data sekunder (dari citra satelit atau data instansi) dengan data primer (pengamatan langsung ke lapangan yang disebut Ground Truth), agar kesimpulan dan rekomendasi pelestarian lingkungan akurat."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah yang membedakan penelitian geografi dengan disiplin sains sosial lainnya?",
+                                options: [
+                                    "Hanya berfokus pada sejarah kuno bumi",
+                                    "Penggunaan analisis pendekatan spasial (keruangan) dan ekologis",
+                                    "Metode penelitian yang tidak menggunakan data statistik",
+                                    "Hanya meneliti perilaku manusia di dalam ruang tertutup"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Ciri khas geografi adalah analisis spasial (distribusi ruang) dan ekologis (hubungan timbal balik makhluk hidup dengan lingkungan alamnya)."
+                            },
+                            {
+                                question: "Mengapa peneliti geografi wajib melakukan proses 'Ground Truth'?",
+                                options: [
+                                    "Untuk berwisata alam secara gratis di lokasi penelitian",
+                                    "Memvalidasi dan membuktikan keakuratan data sekunder citra satelit dengan kondisi riil di lapangan",
+                                    "Membeli contoh batuan vulkanik langka",
+                                    "Mengukur kedalaman inti bumi secara manual"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Ground Truth adalah metode verifikasi langsung ke lapangan untuk memastikan data citra satelit cocok dengan fakta sebenarnya."
+                            },
+                            {
+                                question: "Pendekatan geografi yang mengkaji interaksi timbal balik manusia dengan ekosistem lingkungannya disebut pendekatan...",
+                                options: [
+                                    "Pendekatan Spasial (Keruangan)",
+                                    "Pendekatan Ekologis (Kelingkungan)",
+                                    "Pendekatan Sejarah Kronologis",
+                                    "Pendekatan Statistik Matematika"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pendekatan ekologis (lingkungan) mengkaji interaksi timbal balik aktivitas manusia dengan kondisi fisik ekosistem tempat tinggalnya."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ekonomi",
+                name: "Ekonomi",
+                icon: "trending-up",
+                headerColor: "bg-emerald-600",
+                topics: [
+                    {
+                        id: "konsep-dasar-ekonomi",
+                        title: "Konsep Kelangkaan dan Skala Prioritas",
+                        duration: "10 Menit",
+                        content: [
+                            "Ekonomi berasal dari bahasa Yunani kuno 'Oikonomia' yang artinya aturan rumah tangga. Inti masalah utama ekonomi adalah adanya Kelangkaan (Scarcity), yaitu situasi tidak seimbang di mana keinginan dan kebutuhan manusia tidak terbatas, sedangkan sumber daya pemuas kebutuhan sangat terbatas.",
+                            "Karena kelangkaan ini, manusia dipaksa untuk membuat keputusan rasional dengan menyusun Skala Prioritas. Skala prioritas mengurutkan kebutuhan dari yang paling mendesak (primer), penting (sekunder), hingga yang bisa ditunda (tersier).",
+                            "Ketika kita memilih suatu alternatif pilihan ekonomi, kita otomatis mengorbankan manfaat dari pilihan alternatif terbaik lainnya. Nilai dari pengorbanan alternatif terbaik yang dilewatkan ini disebut sebagai Biaya Peluang (Opportunity Cost)."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah penyebab utama timbulnya masalah kelangkaan (scarcity) ekonomi?",
+                                options: [
+                                    "Suku bunga bank nasional yang terlampau tinggi",
+                                    "Ketidakseimbangan antara kebutuhan manusia yang tidak terbatas dengan alat pemuas yang terbatas",
+                                    "Kegagalan sistem distribusi barang impor pemerintah",
+                                    "Menurunnya daya beli mata uang asing"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Kelangkaan muncul karena kebutuhan manusia bersifat tanpa batas, namun sumber daya alam, modal, dan waktu di bumi sangat terbatas."
+                            },
+                            {
+                                question: "Apakah yang dimaksud dengan Biaya Peluang (Opportunity Cost)?",
+                                options: [
+                                    "Total seluruh pengeluaran belanja harian rumah tangga",
+                                    "Nilai dari alternatif pilihan terbaik lain yang terpaksa dikorbankan karena memilih keputusan saat ini",
+                                    "Diskon khusus yang didapatkan saat membeli barang grosir",
+                                    "Biaya denda keterlambatan pembayaran pajak negara"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Biaya Peluang adalah manfaat atau opportunity dari alternatif terbaik kedua yang terpaksa kita lepaskan demi mengambil keputusan ekonomi saat ini."
+                            },
+                            {
+                                question: "Langkah rasional apa yang wajib disusun manusia untuk mengatasi kelangkaan?",
+                                options: [
+                                    "Membeli semua barang mewah secara berhutang",
+                                    "Menyusun Skala Prioritas kebutuhan hidup berdasarkan tingkat urgensi utama",
+                                    "Menolak melakukan transaksi ekonomi apapun",
+                                    "Mengandalkan bantuan sosial pemerintah selamanya"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Menyusun skala prioritas membantu individu memilah kebutuhan penting mendesak terlebih dahulu untuk diakomodasi dengan sumber daya terbatas."
+                            }
+                        ]
+                    },
+                    {
+                        id: "sistem-ekonomi-indonesia",
+                        title: "Mengenal Sistem Demokrasi Ekonomi Pancasila",
+                        duration: "12 Menit",
+                        content: [
+                            "Sistem Ekonomi yang dianut bangsa Indonesia didasarkan pada landasan konstitusional Pasal 33 UUD 1945, yang dikenal sebagai Sistem Demokrasi Ekonomi Pancasila. Sistem ini menekankan bahwa perekonomian disusun sebagai usaha bersama berdasar atas asas kekeluargaan.",
+                            "Dalam sistem ini, terdapat tiga pilar utama pelaku ekonomi nasional: Badan Usaha Milik Negara/Daerah (BUMN/BUMD) yang menguasai sektor produksi vital publik, Badan Usaha Milik Swasta (BUMS) yang dinamis, serta Koperasi sebagai soko guru ekonomi rakyat.",
+                            "Tujuan utama Demokrasi Ekonomi Pancasila adalah mencegah dominasi monopoli swasta ekstrem (free fight liberalism) maupun penguasaan mutlak otoriter negara (etatisme), demi terciptanya keadilan sosial bagi seluruh rakyat."
+                        ],
+                        quiz: [
+                            {
+                                        question: "Landasan konstitusional utama pelaksanaan sistem ekonomi di Indonesia diatur dalam...",
+                                options: [
+                                    "UUD 1945 Pasal 27 ayat 2",
+                                    "UUD 1945 Pasal 33",
+                                    "Pancasila Sila Kedua saja",
+                                    "Ketetapan MPR tentang ekspor impor"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pasal 33 UUD 1945 merupakan pilar konstitusional utama yang mendasari dan mengatur asas kekeluargaan dalam sistem ekonomi Indonesia."
+                            },
+                            {
+                                question: "Mengapa Koperasi dijuluki sebagai 'Soko Guru' perekonomian Indonesia?",
+                                options: [
+                                    "Karena koperasi didirikan khusus oleh guru-guru sekolah",
+                                    "Konsep usaha koperasi mengutamakan asas kekeluargaan, gotong royong, dan kesejahteraan bersama anggotanya",
+                                    "Koperasi memiliki cabang modal terbesar melebihi swasta asing",
+                                    "Koperasi diawasi langsung oleh organisasi bank dunia"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Koperasi disebut soko guru (tiang utama) karena struktur usahanya sangat mencerminkan jiwa gotong-royong dan asas kekeluargaan nasional."
+                            },
+                            {
+                                question: "Sistem ekonomi Indonesia melarang dominasi monopoli kapitalis barat yang ekstrem yang dikenal dengan nama...",
+                                options: [
+                                    "Etatisme absolut",
+                                    "Sistem Ekonomi Pasar Terpusat",
+                                    "Free Fight Liberalism (Persaingan Bebas Ekstrem)",
+                                    "Ekonomi Berkelanjutan"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Free Fight Liberalism dilarang karena merusak asas keadilan sosial dengan membiarkan pengusaha raksasa mematikan ekonomi usaha rakyat kecil."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "sejarah",
+                name: "Sejarah Indonesia",
+                icon: "history",
+                headerColor: "bg-orange-600",
+                topics: [
+                    {
+                        id: "manusia-purba",
+                        title: "Evolusi Kehidupan Manusia Praaksara",
+                        duration: "10 Menit",
+                        content: [
+                            "Masa Praaksara adalah periodisasi sejarah kuno di mana leluhur manusia belum mengenal sistem tulisan. Nusantara merupakan salah satu wilayah penemuan fosil manusia purba terkaya di dunia, seperti Meganthropus paleojavanicus, Pithecanthropus erectus, hingga Homo sapiens.",
+                            "Kehidupan sosial manusia purba mengalami evolusi cara bertahan hidup yang luar biasa. Berawal dari Masa Berburu dan Meramu (Food Gathering) yang berpindah-pindah tempat tinggal (Nomaden) mengikuti migrasi hewan buruan dan sumber buah-buahan di alam.",
+                            "Evolusi berlanjut ke Masa Bercocok Tanam (Food Producing), di mana manusia mulai hidup menetap secara teratur (Sedenter), mendirikan perkampungan gotong royong awal, bercocok tanam padi, serta memelihara hewan ternak guna bertahan hidup jangka panjang."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah perbedaan mendasar antara pola hidup Nomaden dengan Sedenter?",
+                                options: [
+                                    "Nomaden berarti berburu di laut sedangkan sedenter berburu di darat",
+                                    "Nomaden adalah pola hidup berpindah-pindah tempat tinggal, sedangkan sedenter berarti hidup menetap di suatu wilayah",
+                                    "Nomaden hanya berlaku untuk suku pedalaman di luar pulau Jawa",
+                                    "Nomaden memakan tumbuhan sedangkan sedenter hanya memakan daging hewan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Nomaden berpindah tempat tinggal mengikuti insting ketersediaan pangan alam, sedangkan Sedenter mulai menetap karena sudah bisa bercocok tanam."
+                            },
+                            {
+                                question: "Manakah corak kehidupan ekonomi purba yang paling awal berkembang?",
+                                options: [
+                                    "Masa perdagangan logam perunggu antar pulau",
+                                    "Masa bercocok tanam padi modern di ladang",
+                                    "Masa berburu binatang dan mengumpulkan buah-buahan liar di hutan (Food Gathering)",
+                                    "Masa perundagian spesialis pembuat kapal layar"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Corak ekonomi paling dasar manusia praaksara adalah Food Gathering (berburu dan meramu) langsung dari alam bebas."
+                            },
+                            {
+                                question: "Siapakah ilmuwan terkenal yang menemukan fosil 'Pithecanthropus erectus' di daerah Trinil, Jawa Tengah?",
+                                options: [
+                                    "Eugene Dubois",
+                                    "G.H.R. von Koenigswald",
+                                    "Prof. Dr. Teuku Jacob",
+                                    "Alfred Russel Wallace"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Fosil 'Pithecanthropus erectus' (manusia kera berdiri tegak) ditemukan oleh peneliti asal Belanda Eugene Dubois pada tahun 1891."
+                            }
+                        ]
+                    },
+                    {
+                        id: "kerajaan-hindu-buddha",
+                        title: "Kerajaan Hindu-Buddha & Prasasti Bogor",
+                        duration: "12 Menit",
+                        content: [
+                            "Masuknya kebudayaan Hindu-Buddha dari India melalui jalur perdagangan maritim mengubah tatanan sosial politik Nusantara dari sistem kepala suku menjadi sistem Kerajaan Monarki bercorak Hindu-Buddha yang megah.",
+                            "Khusus wilayah Bogor, pada abad ke-4 hingga ke-7 Masehi berkembang Kerajaan Tarumanegara yang dipimpin oleh raja agung termasyhur bernama Raja Purnawarman. Bukti peninggalan kemegahan kerajaan ini diabadikan dalam 7 prasasti batu tulis kuno.",
+                            "Di antaranya yang ditemukan di Bogor adalah Prasasti Ciaruteun (memuat cetakan sepasang telapak kaki Raja Purnawarman bagai kaki Dewa Wisnu), Prasasti Kebon Kopi (cetakan kaki gajah Airawata tunggangan Dewa Indra), dan Prasasti Jambu yang memuji kegagahan raja dalam perang."
+                        ],
+                        quiz: [
+                            {
+                                question: "Prasasti legendaris peninggalan Kerajaan Tarumanegara yang memuat cetakan tapak kaki Raja Purnawarman bagai Dewa Wisnu adalah...",
+                                options: [
+                                    "Prasasti Kebon Kopi",
+                                    "Prasasti Ciaruteun",
+                                    "Prasasti Jambu (Pasir Koleangkak)",
+                                    "Prasasti Tugu Jakarta"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Prasasti Ciaruteun memuat cap kaki Raja Purnawarman sebagai lambang keagungan dan perlindungan rakyatnya bagai Dewa Wisnu."
+                            },
+                            {
+                                question: "Di kota manakah episentrum penemuan prasasti-prasasti Kerajaan Tarumanegara terbanyak ditemukan?",
+                                options: [
+                                    "Surabaya",
+                                    "Bogor, Jawa Barat",
+                                    "Denpasar, Bali",
+                                    "Medan, Sumatra Utara"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Situs-situs prasasti Tarumanegara (seperti Ciaruteun, Kebon Kopi, Jambu) berlokasi di daerah aliran sungai Kabupaten Bogor, Jawa Barat."
+                            },
+                            {
+                                question: "Apakah makna dari ukiran telapak kaki raja pada prasasti batu kuno tersebut?",
+                                options: [
+                                    "Sebagai batas penanda ukuran alas kaki kerajaan",
+                                    "Lambang kepemilikan mutlak wilayah kekuasaan serta tanda penghormatan raja bagai dewa pelindung bumi",
+                                    "Seni dekorasi hiasan batu tulis semata",
+                                    "Instruksi jalur navigasi berjalan kaki bagi prajurit"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Cap kaki melambangkan legitimasi kekuasaan spiritual raja atas wilayah tanah tersebut laksana dewa penguasa."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // 2. COMPONENT: CORE STUDY MAP & INFOGRAPHICS (100% OFFLINE VISUALIZER)
+        function TopicVisualizer({ topicId }) {
+            const renderVisual = () => {
+                switch (topicId) {
+                    case 'interaksi-sosial':
+                        return (
+                            <div className="space-y-4 text-xs">
+                                <h5 className="font-extrabold text-purple-900 mb-2">Peta Alur Syarat & Bentuk Hubungan Sosial</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 space-y-1.5">
+                                        <span className="font-bold text-purple-900 block">🤝 Proses Asosiatif (Kerja Sama)</span>
+                                        <div className="space-y-1">
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Kerja Sama:</strong> Usaha bersama mencapai tujuan.</div>
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Akomodasi:</strong> Solusi meredakan konflik.</div>
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Asimilasi:</strong> Peleburan 2 budaya baru.</div>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 bg-red-50 rounded-xl border border-red-100 space-y-1.5">
+                                        <span className="font-bold text-red-900 block">⚡ Proses Disosiatif (Perpecahan)</span>
+                                        <div className="space-y-1">
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Persaingan:</strong> Perebutan prestasi secara sportif.</div>
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Kontravensi:</strong> Penolakan/ragu terselubung.</div>
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Pertikaian:</strong> Konflik fisik/pemaksaan.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-100 p-2 rounded-lg text-center font-bold text-[10px] text-slate-600 flex justify-around items-center">
+                                    <span>Kontak Sosial</span> ➡️ <span>Komunikasi</span> ➡️ <span>Interaksi Sosial Terbentuk</span>
+                                </div>
+                            </div>
+                        );
+                    case 'nilai-norma-sosial':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-indigo-900">Hierarki Kekuatan Mengikat Norma Sosial (Terlemah ke Terkuat)</h5>
+                                <div className="flex flex-col space-y-1.5">
+                                    <div className="bg-indigo-700 text-white p-2.5 rounded-lg font-bold flex justify-between items-center">
+                                        <span>1. Adat Istiadat (Customs)</span>
+                                        <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded">Sanksi Adat & Sosial Berat</span>
+                                    </div>
+                                    <div className="bg-indigo-600 text-white p-2.5 rounded-lg font-bold flex justify-between items-center">
+                                        <span>2. Tata Kelakuan (Mores)</span>
+                                        <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded">Teguran Moral Resmi</span>
+                                    </div>
+                                    <div className="bg-indigo-50 text-indigo-900 p-2.5 rounded-lg font-bold border border-indigo-200 flex justify-between items-center">
+                                        <span>3. Kebiasaan (Folkways)</span>
+                                        <span className="text-[10px] bg-indigo-100 px-2 py-0.5 rounded">Sindiran / Teguran</span>
+                                    </div>
+                                    <div className="bg-indigo-50/50 text-indigo-800 p-2.5 rounded-lg border border-indigo-100 flex justify-between items-center">
+                                        <span>4. Cara (Usage)</span>
+                                        <span className="text-[10px] bg-indigo-100/50 px-2 py-0.5 rounded">Cemoohan Ringan</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    case 'peta-penginderaan-jauh':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-teal-900">Alur Pengumpulan Data Penginderaan Jauh (Remote Sensing)</h5>
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px]">
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">☀️<br/><strong>Sumber Tenaga</strong><br/>Matahari</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">☁️<br/><strong>Atmosfer</strong><br/>Hambatan Udara</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">🏔️<br/><strong>Objek Bumi</strong><br/>Hutan/Sungai/Kota</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">🛰️<br/><strong>Sensor Satelit</strong><br/>Perekam Energi</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">📱<br/><strong>Citra Satelit</strong><br/>Peta Visual</div>
+                                </div>
+                            </div>
+                        );
+                    case 'langkah-penelitian-geografi':
+                        return (
+                            <div className="space-y-2 text-xs">
+                                <h5 className="font-extrabold text-teal-900">Langkah Riset Geografi Spasial</h5>
+                                <div className="space-y-1 bg-white p-3 rounded-xl border border-teal-100">
+                                    <div><strong>1. Isu Geosfer:</strong> Meneliti fenomena alam nyata (misal: Longsor Puncak Bogor).</div>
+                                    <div><strong>2. Hipotesis:</strong> Menyusun dugaan penyebab keruangan fenomena geografi.</div>
+                                    <div><strong>3. Data Sekunder & Primer:</strong> Memadukan citra satelit dengan tinjauan langsung ke lapangan <em>(Ground Truth)</em>.</div>
+                                    <div><strong>4. Solusi Wilayah:</strong> Rekomendasi pelestarian kelestarian ekologi.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'konsep-dasar-ekonomi':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-emerald-900">Skema Inti Masalah Ekonomi (Kelangkaan)</h5>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center">
+                                        <span className="text-lg">📈</span><br/>
+                                        <strong>Kebutuhan Manusia</strong><br/>
+                                        <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded-full">Tidak Terbatas</span>
+                                    </div>
+                                    <div className="bg-red-50 border border-red-100 p-3 rounded-xl text-center">
+                                        <span className="text-lg">📉</span><br/>
+                                        <strong>Sumber Daya Alam</strong><br/>
+                                        <span className="text-[10px] text-red-800 font-bold bg-red-100 px-1.5 py-0.2 rounded-full">Sangat Terbatas</span>
+                                    </div>
+                                </div>
+                                <div className="p-2.5 bg-amber-50 rounded-lg text-amber-900 border border-amber-100">
+                                    <strong>Akibat:</strong> Terjadi Kelangkaan ➡️ Manusia wajib menyusun <strong>Skala Prioritas</strong> ➡️ Pilihan memicu adanya <strong>Biaya Peluang (Opportunity Cost)</strong>.
+                                </div>
+                            </div>
+                        );
+                    case 'sistem-ekonomi-indonesia':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-emerald-900">Tiga Pilar Demokrasi Ekonomi Pancasila (UUD 1945 Pasal 33)</h5>
+                                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                                    <div className="p-2 bg-white border border-emerald-100 rounded-lg"><strong>🏛️ BUMN/BUMD:</strong> Menguasai cabang produksi vital publik.</div>
+                                    <div className="p-2 bg-white border border-orange-100 rounded-lg"><strong>👥 Koperasi:</strong> Soko guru ekonomi asas kekeluargaan.</div>
+                                    <div className="p-2 bg-white border border-blue-100 rounded-lg"><strong>🏢 Swasta (BUMS):</strong> Penggerak pasar & inovasi lapangan kerja.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'manusia-purba':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-orange-900">Evolusi Budaya & Pola Tinggal Leluhur Praaksara</h5>
+                                <div className="border-l-2 border-orange-200 pl-3 space-y-2">
+                                    <div><strong>1. Masa Berburu (Paleolitikum):</strong> Pola hidup berpindah-pindah <em>(Nomaden)</em>, mengandalkan bahan alam langsung <em>(Food Gathering)</em>.</div>
+                                    <div><strong>2. Masa Bercocok Tanam (Neolitikum):</strong> Pola hidup menetap berkelompok <em>(Sedenter)</em>, mulai memproduksi bahan makanan mandiri <em>(Food Producing)</em>.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'kerajaan-hindu-buddha':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-orange-900">Tiga Prasasti Kuno Tarumanegara yang Ditemukan di Bogor</h5>
+                                <div className="space-y-1.5">
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">👣 <strong>Prasasti Ciaruteun:</strong> Cetakan kaki Raja Purnawarman bagai telapak kaki Dewa Wisnu pelindung bumi.</div>
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">🐘 <strong>Prasasti Kebon Kopi:</strong> Ukiran tapak kaki gajah Airawata sakral tunggangan perang Dewa Indra.</div>
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">🏹 <strong>Prasasti Jambu:</strong> Memuji keberanian sang raja menaklukkan musuh dalam perang.</div>
+                                </div>
+                            </div>
+                        );
+                    default:
+                        return <p className="text-slate-400 text-center">Visualizer peta konsep tidak tersedia.</p>;
+                }
+            };
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-blue-50 text-blue-600 p-2 rounded-lg"><i data-lucide="layers"></i></div>
+                        <div>
+                            <h4 className="font-bold text-slate-800 text-sm md:text-base">Infografis & Peta Konsep IPS</h4>
+                            <p className="text-xs text-slate-500">Skema konsep teori untuk memperkuat daya ingat belajar Anda</p>
+                        </div>
+                    </div>
+                    <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-xl">{renderVisual()}</div>
+                </div>
+            );
+        }
+
+        // 3. COMPONENT: INTERACTIVE FLASHCARDS STUDY DECK
+        const TOPIC_FLASHCARDS = {
+            'interaksi-sosial': [
+                { front: 'Asosiatif', back: 'Proses hubungan sosial yang mengarah kepada persatuan, integrasi, dan solidaritas sosial.' },
+                { front: 'Disosiatif', back: 'Proses hubungan sosial yang mengarah kepada perpecahan, kompetisi, pertikaian, atau konflik.' },
+                { front: 'Zoon Politikon', back: 'Istilah sosiologi dari Aristoteles yang menyatakan bahwa manusia pada kodratnya adalah makhluk sosial.' }
+            ],
+            'nilai-norma-sosial': [
+                { front: 'Kebiasaan (Folkways)', back: 'Perilaku berulang-ulang yang diterima masyarakat umum karena bernilai baik (contoh: menyapa guru).' },
+                { front: 'Adat Istiadat (Customs)', back: 'Aturan adat turun-temurun yang mengikat kuat secara sakral dengan sanksi adat tegas.' },
+                { front: 'Usage (Cara)', back: 'Bentuk norma sosial dengan daya ikat paling lemah, melanggarnya hanya mendapat teguran ringan.' }
+            ],
+            'peta-penginderaan-jauh': [
+                { front: 'Skala Peta', back: 'Rasio matematika perbandingan antara jarak di lembar peta dengan jarak sesungguhnya di permukaan bumi.' },
+                { front: 'Citra Satelit', back: 'Hasil perekaman visual digital dari permukaan bumi menggunakan sensor elektromagnetik satelit.' },
+                { front: 'Legenda Peta', back: 'Bagian peta yang berisi penjelasan atau daftar arti dari simbol-simbol visual yang digunakan.' }
+            ],
+            'langkah-penelitian-geografi': [
+                { front: 'Pendekatan Spasial', back: 'Pendekatan khas geografi yang mengkaji penyebaran lokasi dan struktur ruang fenomena geosfer.' },
+                { front: 'Pendekatan Ekologis', back: 'Pendekatan geografi yang mengkaji interaksi timbal balik makhluk hidup dengan ekosistem fisiknya.' },
+                { front: 'Ground Truth (Verifikasi)', back: 'Pengamatan langsung ke lokasi penelitian untuk memvalidasi keakuratan data sekunder citra satelit.' }
+            ],
+            'konsep-dasar-ekonomi': [
+                { front: 'Oikonomia', back: 'Istilah Yunani asal mula kata ekonomi. Oikos berarti rumah tangga, dan Nomos berarti aturan/hukum.' },
+                { front: 'Kelangkaan (Scarcity)', back: 'Kondisi ketidakseimbangan keinginan manusia tak terbatas, sedangkan alat pemuas sangat terbatas.' },
+                { front: 'Biaya Peluang', back: 'Nilai dari pilihan terbaik lain yang terpaksa dikorbankan untuk memilih keputusan ekonomi saat ini.' }
+            ],
+            'sistem-ekonomi-indonesia': [
+                { front: 'Pasal 33 UUD 1945', back: 'Dasar hukum perekonomian Indonesia yang menyatakan bahwa ekonomi disusun atas asas kekeluargaan.' },
+                { front: 'Soko Guru Ekonomi', back: 'Sebutan luhur bagi Koperasi di Indonesia karena konsep usahanya mencerminkan asas kekeluargaan nasional.' },
+                { front: 'BUMN', back: 'Badan Usaha Milik Negara yang bertugas mengelola sektor-sektor produksi vital untuk kemakmuran seluruh rakyat.' }
+            ],
+            'manusia-purba': [
+                { front: 'Nomaden', back: 'Pola hidup berpindah-pindah tempat tinggal menyesuaikan ketersediaan pangan di alam liar.' },
+                { front: 'Sedenter', back: 'Pola hidup menetap di suatu daerah perkampungan awal, bercocok tanam, dan memelihara hewan ternak.' },
+                { front: 'Pithecanthropus erectus', back: 'Manusia purba penemuan Eugene Dubois di Trinil Jawa Tengah yang artinya "Manusia Kera Berdiri Tegak".' }
+            ],
+            'kerajaan-hindu-buddha': [
+                { front: 'Dewa Wisnu', back: 'Dewa pelindung alam semesta. Telapak kaki Raja Purnawarman disimbolkan bagai tapak kaki Wisnu.' },
+                { front: 'Prasasti Ciaruteun', back: 'Prasasti Tarumanegara legendaris di Bogor yang memuat ukiran tapak kaki Raja Purnawarman.' },
+                { front: 'Sumpah Palapa', back: 'Sumpah kesatuan Nusantara legendaris yang diikrarkan oleh Patih Gajah Mada dari Majapahit.' }
+            ]
+        };
+
+        function FlashcardsGame({ topicId, onComplete }) {
+            const cards = TOPIC_FLASHCARDS[topicId] || [];
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [completed, setCompleted] = useState(false);
+
+            if (cards.length === 0) return null;
+
+            const handleNext = () => {
+                setIsFlipped(false);
+                setTimeout(() => {
+                    if (currentIndex < cards.length - 1) {
+                        setCurrentIndex(prev => prev + 1);
+                    } else {
+                        setCompleted(true);
+                        onComplete(30); // Beri bonus 30 XP
+                    }
+                }, 200);
+            };
+
+            const handleReset = () => {
+                setCurrentIndex(0);
+                setIsFlipped(false);
+                setCompleted(false);
+            };
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-amber-50 text-amber-600 p-2 rounded-lg"><i data-lucide="layers"></i></div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base">Flashcard Penghafal Istilah</h4>
+                                <p className="text-xs text-slate-500">Klik kartu untuk membalik dan melihat jawaban arti istilah</p>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-400">
+                            {!completed ? `${currentIndex + 1} / ${cards.length}` : "Selesai"}
+                        </span>
+                    </div>
+
+                    {!completed ? (
+                        <div className="space-y-4">
+                            <div 
+                                onClick={() => setIsFlipped(!isFlipped)}
+                                className="h-44 w-full cursor-pointer perspective bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center p-6 text-center select-none relative hover:border-amber-400 transition"
+                            >
+                                <span className="absolute top-2 right-3 text-[10px] text-slate-400 font-semibold">Klik Untuk Balik Kartu 🔄</span>
+                                <div>
+                                    {!isFlipped ? (
+                                        <div>
+                                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-1">Istilah / Konsep</span>
+                                            <h3 className="font-extrabold text-lg text-slate-800">{cards[currentIndex].front}</h3>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Definisi / Arti</span>
+                                            <p className="text-xs text-slate-700 leading-relaxed font-semibold">{cards[currentIndex].back}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <button 
+                                    onClick={handleNext}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1 cursor-pointer transition shadow-sm"
+                                >
+                                    <span>{currentIndex === cards.length - 1 ? "Selesai Belajar" : "Kartu Berikutnya"}</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-6 space-y-3">
+                            <div className="inline-block bg-amber-100 text-amber-600 p-3 rounded-full">🏆</div>
+                            <h5 className="font-bold text-sm text-slate-800">Hebat! Kamu Berhasil Mengingat Istilah</h5>
+                            <p className="text-xs text-slate-500 max-w-xs mx-auto">Membiasakan menghafal istilah penting memperbesar peluang kelulusan nilai ujian IPS!</p>
+                            <button 
+                                onClick={handleReset}
+                                className="border border-slate-200 hover:bg-slate-100 font-bold text-xs py-1.5 px-4 rounded-lg cursor-pointer transition flex items-center gap-1 mx-auto"
+                            >
+                                <span>Ulangi Kembali</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // 4. COMPONENT: OFFLINE IPS GLOSSARY SEARCH WIDGET
+        const GLOSSARY_ITEMS = [
+            { term: 'Zoon Politikon', definition: 'Manusia sebagai makhluk sosial yang secara kodrati selalu membutuhkan interaksi dan hidup berdampingan dengan manusia lainnya.', subject: 'Sosiologi' },
+            { term: 'Asosiatif', definition: 'Bentuk interaksi sosial positif yang mengarah pada kesatuan, persatuan, integrasi, dan pembentukan solidaritas kelompok.', subject: 'Sosiologi' },
+            { term: 'Disosiatif', definition: 'Bentuk interaksi sosial negatif yang mengarah pada kompetisi, kontravensi, pertikaian, perpecahan, atau konflik kepentingan.', subject: 'Sosiologi' },
+            { term: 'Norma Sosial', definition: 'Aturan, pedoman, atau ketentuan yang mengikat perilaku masyarakat agar tercipta keteraturan, ketertiban, dan keadilan umum.', subject: 'Sosiologi' },
+            { term: 'Folkways', definition: 'Norma kebiasaan yang diulang-ulang dalam kehidupan sehari-hari karena dipandang baik (contoh: menyapa orang tua dengan sopan).', subject: 'Sosiologi' },
+            { term: 'Skala Peta', definition: 'Perbandingan matematis antara jarak dua titik pada lembar kertas peta dengan jarak sesungguhnya di lapangan permukaan bumi.', subject: 'Geografi' },
+            { term: 'Penginderaan Jauh', definition: 'Ilmu atau seni mendeteksi dan memperoleh informasi mengenai objek bumi tanpa menyentuh objek fisik tersebut secara langsung (via satelit/sensor).', subject: 'Geografi' },
+            { term: 'Citra Satelit', definition: 'Gambar visual permukaan bumi yang dihasilkan dari pemotretan sensor satelit luar angkasa.', subject: 'Geografi' },
+            { term: 'Geosfer', definition: 'Lapisan-lapisan penyusun bumi yang mencakup litosfer (batuan), atmosfer (udara), hidrosfer (air), biosfer (hayat), dan antroposfer (manusia).', subject: 'Geografi' },
+            { term: 'SIG (Sistem Informasi Geografis)', definition: 'Sistem komputerisasi terintegrasi untuk menyimpan, memanipulasi, menganalisis, dan memetakan data berbasis keruangan atau spasial.', subject: 'Geografi' },
+            { term: 'Kelangkaan (Scarcity)', definition: 'Masalah inti ekonomi di mana jumlah keinginan manusia tidak terbatas, sedangkan sumber daya alam pemuasnya sangat terbatas.', subject: 'Ekonomi' },
+            { term: 'Biaya Peluang', definition: 'Manfaat atau potensi terbaik yang terpaksa dikorbankan demi mengambil satu keputusan ekonomi terpilih dibandingkan opsi lainnya.', subject: 'Ekonomi' },
+            { term: 'Oikonomia', definition: 'Bahasa Yunani kuno asal kata ekonomi, di mana oikos berarti rumah tangga dan nomos berarti aturan/hukum.', subject: 'Ekonomi' },
+            { term: 'Koperasi', definition: 'Badan usaha ekonomi rakyat yang dikelola bersama berasaskan kekeluargaan demi meningkatkan kesejahteraan segenap anggotanya.', subject: 'Ekonomi' },
+            { term: 'BUMN', definition: 'Badan Usaha Milik Negara yang bertugas memproduksi cabang vital ekonomi demi hajat hidup rakyat banyak sekaligus penopang pembangunan.', subject: 'Ekonomi' },
+            { term: 'Praaksara', definition: 'Masa kuno kehidupan manusia purba sebelum mereka mengenal tulisan atau sistem aksara pencatatan sejarah.', subject: 'Sejarah' },
+            { term: 'Nomaden', definition: 'Pola kehidupan masyarakat purba yang berpindah-pindah tempat tinggal karena memburu binatang atau mencari pangan musiman di alam liar.', subject: 'Sejarah' },
+            { term: 'Sedenter', definition: 'Gaya hidup menetap di suatu wilayah perkampungan berkelanjutan karena mulai mahir memproduksi bahan makanan mandiri (bercocok tanam).', subject: 'Sejarah' },
+            { term: 'Prasasti', definition: 'Piagam kuno, maklumat, atau ukiran tulisan resmi pada batu/tembaga peninggalan kerajaan kuno di Nusantara.', subject: 'Sejarah' },
+            { term: 'Purnawarman', definition: 'Raja agung legendaris Kerajaan Tarumanegara Jawa Barat yang terkenal cerdas, berani, serta membangun irigasi saluran Sungai Gomati.', subject: 'Sejarah' }
+        ];
+
+        function IpsGlossary() {
+            const [search, setSearch] = useState('');
+            const [filterTab, setFilterTab] = useState('Semua');
+
+            const filtered = GLOSSARY_ITEMS.filter(item => {
+                const matchesSearch = item.term.toLowerCase().includes(search.toLowerCase()) || 
+                                      item.definition.toLowerCase().includes(search.toLowerCase());
+                const matchesFilter = filterTab === 'Semua' || item.subject === filterTab;
+                return matchesSearch && matchesFilter;
+            });
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="bg-blue-50 text-blue-600 p-2 rounded-lg"><i data-lucide="book-open"></i></div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base">Kamus Glosarium IPS Offline</h4>
+                                <p className="text-xs text-slate-500">Cari & pelajari istilah penting geografi, sosiologi, sejarah & ekonomi</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Cari kata (contoh: Nomaden, Scarcity)..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-4 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg text-[10px] font-bold">
+                        {['Semua', 'Sosiologi', 'Geografi', 'Ekonomi', 'Sejarah'].map(tab => (
+                            <button 
+                                key={tab}
+                                onClick={() => setFilterTab(tab)}
+                                className={`flex-1 py-1 rounded cursor-pointer ${filterTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                        {filtered.length > 0 ? filtered.map((item, idx) => {
+                            let badgeStyle = 'bg-purple-100 text-purple-800';
+                            if (item.subject === 'Geografi') badgeStyle = 'bg-teal-100 text-teal-800';
+                            else if (item.subject === 'Ekonomi') badgeStyle = 'bg-emerald-100 text-emerald-800';
+                            else if (item.subject === 'Sejarah') badgeStyle = 'bg-orange-100 text-orange-800';
+
+                            return (
+                                <div key={idx} className="p-3 bg-slate-50 border border-slate-200/50 rounded-xl space-y-1 text-xs">
+                                    <div className="flex justify-between items-center">
+                                        <strong className="text-slate-800">{item.term}</strong>
+                                        <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded uppercase ${badgeStyle}`}>{item.subject}</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 leading-relaxed">{item.definition}</p>
+                                </div>
+                            );
+                        }) : <p className="text-center text-slate-400 text-xs py-4">Kata tidak ditemukan.</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        // 5. COMPONENT: INTERACTIVE QUIZ GAME 
+        function QuizGame({ quiz, topicTitle, onComplete, onClose }) {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [isAnswered, setIsAnswered] = useState(false);
+            const [score, setScore] = useState(0);
+            const [isFinished, setIsFinished] = useState(false);
+
+            const handleCheck = () => {
+                if (selectedOption === null || isAnswered) return;
+                setIsAnswered(true);
+                if (selectedOption === quiz[currentIndex].correctAnswer) {
+                    setScore(prev => prev + 1);
+                }
+            };
+
+            const handleNext = () => {
+                if (currentIndex < quiz.length - 1) {
+                    setCurrentIndex(prev => prev + 1);
+                    setSelectedOption(null);
+                    setIsAnswered(false);
+                } else {
+                    const pct = Math.round((score / quiz.length) * 100);
+                    const pts = score * 50;
+                    setIsFinished(true);
+                    onComplete(pct, pts);
+                }
+            };
+
+            return (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    {!isFinished ? (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Kuis Evaluasi</span>
+                                    <h4 className="text-xs font-bold text-slate-600 truncate max-w-xs">{topicTitle}</h4>
+                                </div>
+                                <span className="text-xs font-bold text-slate-400">Soal {currentIndex + 1} dari {quiz.length}</span>
+                            </div>
+
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-xs font-semibold leading-relaxed text-slate-800">
+                                {quiz[currentIndex].question}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-2">
+                                {quiz[currentIndex].options.map((opt, idx) => {
+                                    let style = 'border-slate-200 hover:bg-slate-100 text-slate-700';
+                                    if (selectedOption === idx && !isAnswered) {
+                                        style = 'border-blue-500 bg-blue-50 text-blue-700 font-semibold';
+                                    } else if (isAnswered) {
+                                        if (idx === quiz[currentIndex].correctAnswer) {
+                                            style = 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold';
+                                        } else if (selectedOption === idx && idx !== quiz[currentIndex].correctAnswer) {
+                                            style = 'border-red-500 bg-red-50 text-red-800';
+                                        } else {
+                                            style = 'border-slate-100 text-slate-400 bg-slate-50/50';
+                                        }
+                                    }
+                                    return (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => !isAnswered && setSelectedOption(idx)}
+                                            className={`text-left p-3.5 rounded-xl border text-xs cursor-pointer transition ${style}`}
+                                            disabled={isAnswered}
+                                        >
+                                            {opt}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {isAnswered && (
+                                <div className="p-3 bg-slate-100 border border-slate-200 rounded-xl text-[11px] leading-relaxed text-slate-600 space-y-1">
+                                    <strong className="text-slate-800 block">Pembahasan Soal:</strong>
+                                    <p>{quiz[currentIndex].explanation}</p>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                                <button onClick={onClose} className="text-xs font-bold text-slate-400 hover:text-slate-600">Keluar Kuis</button>
+                                {!isAnswered ? (
+                                    <button 
+                                        onClick={handleCheck}
+                                        disabled={selectedOption === null}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-5 rounded-xl cursor-pointer transition disabled:bg-slate-200"
+                                    >
+                                        Periksa Jawaban
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={handleNext}
+                                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-xl cursor-pointer transition"
+                                    >
+                                        {currentIndex === quiz.length - 1 ? "Lihat Hasil" : "Berikutnya"}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-6 space-y-4">
+                            <div className="inline-block bg-yellow-400 text-white p-3.5 rounded-full shadow-lg text-lg">🏆</div>
+                            <div className="space-y-1">
+                                <h4 className="font-extrabold text-slate-800 text-base">Selamat, Kuis Selesai!</h4>
+                                <p className="text-xs text-slate-500">Materi evaluasi mandiri selesai dipelajari.</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto p-3 bg-white border border-slate-100 rounded-xl">
+                                <div className="text-center border-r border-slate-100">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Nilai</span>
+                                    <span className="text-xl font-black text-blue-600">{Math.round((score / quiz.length) * 100)}%</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Bonus Poin</span>
+                                    <span className="text-xl font-black text-amber-500">+{score * 50} XP</span>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-6 rounded-xl cursor-pointer transition">
+                                Selesai Belajar
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // 6. MAIN APP COMPONENT
+        function App() {
+            const [layer, setLayer] = useState('landing'); // landing, grades, subjects, topics, study
+            const [selectedSubject, setSelectedSubject] = useState(null);
+            const [selectedTopic, setSelectedTopic] = useState(null);
+            const [activeQuiz, setActiveQuiz] = useState(null);
+            const [isSpeaking, setIsSpeaking] = useState(false);
+
+            const [progress, setProgress] = useState({
+                completedTopics: [],
+                quizScores: {},
+                points: 100
+            });
+
+            useEffect(() => {
+                const saved = localStorage.getItem('ips_harapan_siswa_progress');
+                if (saved) {
+                    try { setProgress(JSON.parse(saved)); } catch(e){}
+                }
+            }, []);
+
+            useEffect(() => {
+                // Instantly sync Lucide icons on DOM updates
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [layer, selectedSubject, selectedTopic, activeQuiz]);
+
+            const saveProgress = (newProg) => {
+                setProgress(newProg);
+                localStorage.setItem('ips_harapan_siswa_progress', JSON.stringify(newProg));
+            };
+
+            const handleCompleteQuiz = (scorePct, ptsEarned) => {
+                if (!selectedTopic) return;
+                const completed = progress.completedTopics.includes(selectedTopic.id);
+                const updatedCompleted = completed ? progress.completedTopics : [...progress.completedTopics, selectedTopic.id];
+                const high = progress.quizScores[selectedTopic.id] || 0;
+                const updatedScores = { ...progress.quizScores, [selectedTopic.id]: Math.max(high, scorePct) };
+                
+                saveProgress({
+                    completedTopics: updatedCompleted,
+                    quizScores: updatedScores,
+                    points: progress.points + (completed ? Math.round(ptsEarned / 2) : ptsEarned)
+                });
+            };
+
+            const handleCompleteFlash = (pts) => {
+                saveProgress({ ...progress, points: progress.points + pts });
+            };
+
+            const toggleSpeech = (text) => {
+                if ('speechSynthesis' in window) {
+                    if (isSpeaking) {
+                        window.speechSynthesis.cancel();
+                        setIsSpeaking(false);
+                    } else {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'id-ID';
+                        utterance.rate = 0.95;
+                        utterance.onend = () => setIsSpeaking(false);
+                        utterance.onerror = () => setIsSpeaking(false);
+                        setIsSpeaking(true);
+                        window.speechSynthesis.speak(utterance);
+                    }
+                } else {
+                    alert('Layanan narator suara tidak didukung di komputer Anda.');
+                }
+            };
+
+            const resetProgress = () => {
+                if (confirm('Apakah Anda yakin ingin mengulang progress belajar dari awal?')) {
+                    saveProgress({ completedTopics: [], quizScores: {}, points: 100 });
+                }
+            };
+
+            const getSubjectProgress = (sub) => {
+                if (!sub.topics || sub.topics.length === 0) return 0;
+                const completed = sub.topics.filter(t => progress.completedTopics.includes(t.id)).length;
+                return Math.round((completed / sub.topics.length) * 100);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col">
+                    {/* Header bar */}
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 py-3 shadow-sm">
+                        <div className="max-w-7xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {layer !== 'landing' && (
+                                    <button 
+                                        onClick={() => {
+                                            if (layer === 'study') { setLayer('topics'); setActiveQuiz(null); if('speechSynthesis' in window) window.speechSynthesis.cancel(); setIsSpeaking(false); }
+                                            else if (layer === 'topics') setLayer('subjects');
+                                            else if (layer === 'subjects') setLayer('grades');
+                                            else if (layer === 'grades') setLayer('landing');
+                                        }}
+                                        className="hover:bg-slate-100 p-2 rounded-full border border-slate-200 transition cursor-pointer"
+                                    >
+                                        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i>
+                                    </button>
+                                )}
+                                <div>
+                                    <h1 className="font-extrabold text-base md:text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
+                                        <span className="text-xl">🎓</span>
+                                        <span>IPS Harapan Siswa</span>
+                                    </h1>
+                                    <p className="text-[10px] text-slate-400 hidden sm:block">SMK Harapan Siswa Bogor • Media Belajar Mandiri</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs font-bold">
+                                <div className="bg-amber-50 border border-amber-100 text-amber-900 rounded-full py-1 px-3 flex items-center gap-1">
+                                    ⭐ <span>{progress.points} XP</span>
+                                </div>
+                                <div className="bg-blue-50 border border-blue-100 text-blue-900 rounded-full py-1 px-3 flex items-center gap-1">
+                                    🏆 <span>Selesai: {progress.completedTopics.length}/8 Topik</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Area */}
+                    <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+                        {/* LANDING PAGE */}
+                        {layer === 'landing' && (
+                            <div className="space-y-12 py-6 md:py-12">
+                                <div className="text-center space-y-4 max-w-2xl mx-auto">
+                                    <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Kurikulum Merdeka SMK</span>
+                                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Platform Belajar IPS<br/><span className="text-blue-600">Jadi Lebih Mudah!</span></h2>
+                                    <p className="text-xs md:text-sm text-slate-500 leading-relaxed max-w-lg mx-auto">Selamat datang di media pembelajaran IPS resmi SMK Harapan Siswa Bogor. Tingkatkan wawasanmu lewat kuis seru, peta konsep interaktif, flashcards hafalan istilah, dan kamus glosarium IPS!</p>
+                                    <button 
+                                        onClick={() => setLayer('grades')}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs md:text-sm py-3 px-8 rounded-xl transition shadow-lg cursor-pointer inline-flex items-center gap-2"
+                                    >
+                                        <span>Mulai Belajar Sekarang</span>
+                                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pt-4">
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">📖</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Materi Lengkap SMK</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Mencakup 4 pilar IPS utama: Geografi, Sejarah Indonesia, Ekonomi, dan Sosiologi yang disesuaikan khusus siswa SMK.</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">🎮</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Gamifikasi Kuis & Flashcards</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Asah daya ingatmu lewat kuis interaktif dengan pembahasan instan dan kartu pintar penghafal istilah praktis.</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">📊</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Peta Konsep & Glosarium</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Mudahkan pemahaman materi abstrak lewat infografis bagan visual dan kamus glosarium istilah IPS terlengkap.</p>
+                                    </div>
+                                </div>
+
+                                <div className="max-w-4xl mx-auto pt-6 border-t border-slate-200 space-y-4">
+                                    <h4 className="text-center font-extrabold text-slate-900 text-base md:text-lg">Kamus Glosarium Istilah IPS Bawaan</h4>
+                                    <IpsGlossary />
+                                </div>
+
+                                {progress.completedTopics.length > 0 && (
+                                    <div className="text-center"><button onClick={resetProgress} className="text-[11px] text-slate-400 hover:text-red-500 underline cursor-pointer">Reset Semua Progress Belajar</button></div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* GRADE SELECTION */}
+                        {layer === 'grades' && (
+                            <div className="space-y-6 max-w-2xl mx-auto">
+                                <div className="text-center space-y-1">
+                                    <h2 className="text-lg md:text-xl font-extrabold text-slate-900">Pilih Tingkat Kelas</h2>
+                                    <p className="text-xs text-slate-500">Akses silabus materi sesuai tingkatan pendidikan Anda</p>
+                                </div>
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={() => setLayer('subjects')}
+                                        className="w-full bg-white p-5 rounded-2xl border-2 border-blue-500 text-left hover:shadow-md transition flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-blue-600 text-white p-3 rounded-xl">📖</div>
+                                            <div>
+                                                <strong className="text-slate-800 block text-sm">Kelas X (Sepuluh)</strong>
+                                                <span className="text-xs text-slate-500">4 Disiplin Ilmu • 8 Materi Pokok SMK Lengkap</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-blue-50 text-blue-600 p-2 rounded-full">➡️</div>
+                                    </button>
+                                    <div className="w-full bg-slate-100 p-5 rounded-2xl border border-slate-200 text-left flex items-center justify-between opacity-60">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-slate-200 text-slate-700 p-3 rounded-xl">🔒</div>
+                                            <div>
+                                                <strong className="text-slate-700 block text-sm">Kelas XI (Sebelas)</strong>
+                                                <span className="text-xs text-slate-500">Segera Hadir • Penyesuaian Silabus Vokasi Baru</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-slate-100 p-5 rounded-2xl border border-slate-200 text-left flex items-center justify-between opacity-60">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-slate-200 text-slate-700 p-3 rounded-xl">🔒</div>
+                                            <div>
+                                                <strong className="text-slate-700 block text-sm">Kelas XII (Duabelas)</strong>
+                                                <span className="text-xs text-slate-500">Segera Hadir • Pendalaman Materi Persiapan Kelulusan</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUBJECT SELECTION */}
+                        {layer === 'subjects' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg md:text-xl font-extrabold text-slate-900">Mata Pelajaran - Kelas X</h2>
+                                    <p className="text-xs text-slate-500">Pilih salah satu cabang pilar keilmuan IPS di bawah ini</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {IPS_SUBJECTS.map((sub) => {
+                                        const pct = getSubjectProgress(sub);
+                                        return (
+                                            <button 
+                                                key={sub.id}
+                                                onClick={() => { setSelectedSubject(sub); setLayer('topics'); }}
+                                                className="bg-white rounded-2xl border border-slate-200 text-left overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col"
+                                            >
+                                                <div className={`p-4 ${sub.headerColor} text-white flex justify-between items-center`}>
+                                                    <strong className="text-sm font-black uppercase tracking-wider">{sub.name}</strong>
+                                                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{sub.topics.length} Materi</span>
+                                                </div>
+                                                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] font-bold text-slate-400 block uppercase">Sub-Topik Bahasan:</span>
+                                                        <ul className="text-xs text-slate-600 list-disc list-inside space-y-0.5">
+                                                            {sub.topics.map((t, idx) => <li key={idx} className="truncate">{t.title}</li>)}
+                                                        </ul>
+                                                    </div>
+                                                    <div className="pt-3 border-t border-slate-100 space-y-1">
+                                                        <div className="flex justify-between text-[10px] font-extrabold text-slate-500">
+                                                            <span>Selesai Belajar</span>
+                                                            <span>{pct}%</span>
+                                                        </div>
+                                                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-blue-600" style={{ width: `${pct}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="pt-6 border-t border-slate-200">
+                                    <IpsGlossary />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TOPIC SELECTION */}
+                        {layer === 'topics' && selectedSubject && (
+                            <div className="space-y-6 max-w-2xl mx-auto">
+                                <div className={`p-6 rounded-2xl ${selectedSubject.headerColor} text-white space-y-2`}>
+                                    <span className="text-[10px] bg-white/25 px-2.5 py-0.5 rounded-full font-extrabold uppercase">{selectedSubject.name} - Kelas X</span>
+                                    <h2 className="text-xl md:text-2xl font-black">{selectedSubject.topics.length} Materi Pembelajaran</h2>
+                                    <div className="space-y-1 max-w-xs pt-1">
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span>Progress Pembelajaran:</span>
+                                            <span>{getSubjectProgress(selectedSubject)}%</span>
+                                        </div>
+                                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                                            <div className="h-full bg-white" style={{ width: `${getSubjectProgress(selectedSubject)}%` }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-bold text-slate-400 block uppercase">Daftar Modul Materi Pembelajaran:</span>
+                                    {selectedSubject.topics.map((topic, idx) => {
+                                        const comp = progress.completedTopics.includes(topic.id);
+                                        const score = progress.quizScores[topic.id];
+                                        return (
+                                            <button 
+                                                key={topic.id}
+                                                onClick={() => { setSelectedTopic(topic); setLayer('study'); }}
+                                                className="w-full bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-400 text-left transition flex items-center justify-between cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${comp ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                        {comp ? "✅" : idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-800 text-xs md:text-sm">{topic.title}</h4>
+                                                        <p className="text-[10px] text-slate-400 mt-0.5">Estimasi Durasi: {topic.duration} • 3 Soal Kuis</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {comp && <span className="text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">Skor: {score}%</span>}
+                                                    <span className={`text-[10px] font-black py-1 px-3.5 rounded-lg ${comp ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white'}`}>{comp ? "Tinjau" : "Mulai"}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* INTERACTIVE STUDY CORE */}
+                        {layer === 'study' && selectedSubject && selectedTopic && (
+                            <div className="space-y-6">
+                                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs md:text-sm font-semibold">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-slate-400">Kelas X</span>
+                                        <span className="text-slate-300">/</span>
+                                        <span className="text-slate-500">{selectedSubject.name}</span>
+                                        <span className="text-slate-300">/</span>
+                                        <strong className="text-blue-600 truncate max-w-xs">{selectedTopic.title}</strong>
+                                    </div>
+                                    <button 
+                                        onClick={() => setActiveQuiz(activeQuiz ? null : selectedTopic)}
+                                        className="bg-blue-600 text-white font-extrabold text-[11px] py-1.5 px-4 rounded-xl cursor-pointer hover:bg-blue-700 transition"
+                                    >
+                                        {activeQuiz ? "Kembali Membaca Materi" : "Uji Pemahaman (Kuis)"}
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                    {/* Left Article reading */}
+                                    <div className="lg:col-span-7 space-y-6">
+                                        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                                            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                                                <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded uppercase">Modul {selectedSubject.name}</span>
+                                                <span className="text-[11px] text-slate-400 font-medium">Baca: {selectedTopic.duration}</span>
+                                            </div>
+
+                                            <h2 className="text-lg md:text-xl font-black text-slate-900 leading-tight">{selectedTopic.title}</h2>
+
+                                            {/* Offline TTS speech voice */}
+                                            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg">🗣️</span>
+                                                    <div>
+                                                        <strong className="text-slate-800 block">Narator Suara Otomatis</strong>
+                                                        <span className="text-[10px] text-slate-400">Dengar materi via audio robot browser (Offline)</span>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => toggleSpeech(selectedTopic.content.join(' '))}
+                                                    className={`py-1 px-3 rounded-lg font-bold border transition cursor-pointer ${isSpeaking ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}
+                                                >
+                                                    {isSpeaking ? "Berhenti" : "Dengarkan"}
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-4 text-xs md:text-sm text-slate-700 leading-relaxed text-justify">
+                                                {selectedTopic.content.map((p, i) => <p key={i} className="indent-5">{p}</p>)}
+                                            </div>
+
+                                            {progress.completedTopics.includes(selectedTopic.id) && (
+                                                <div className="bg-emerald-50 border border-emerald-100 text-emerald-900 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                                                    <span>✅</span>
+                                                    <span>Luar biasa! Kamu sudah lulus kuis materi pembelajaran ini!</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <TopicVisualizer topicId={selectedTopic.id} />
+                                    </div>
+
+                                    {/* Right Quiz & Cards side decks */}
+                                    <div className="lg:col-span-5 space-y-6">
+                                        {activeQuiz ? (
+                                            <QuizGame 
+                                                quiz={selectedTopic.quiz}
+                                                topicTitle={selectedTopic.title}
+                                                onComplete={handleCompleteQuiz}
+                                                onClose={() => setActiveQuiz(null)}
+                                            />
+                                        ) : (
+                                            <div className="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-lg space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span>💡</span>
+                                                    <strong className="text-sm font-black block">Mulai Kuis Sekarang!</strong>
+                                                </div>
+                                                <p className="text-[11px] text-slate-300 leading-relaxed">Uji pemahaman belajarmu dengan kuis interaktif 3 pertanyaan pilihan ganda disertai pembahasan lengkap demi memperoleh tambahan <strong>+50 XP</strong>!</p>
+                                                <button 
+                                                    onClick={() => setActiveQuiz(selectedTopic)}
+                                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs py-2 px-4 rounded-xl cursor-pointer transition shadow-md"
+                                                >
+                                                    Mulai Kuis Interaktif
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <FlashcardsGame 
+                                            topicId={selectedTopic.id}
+                                            onComplete={handleCompleteFlash}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer bar */}
+                    <footer className="bg-slate-950 text-slate-500 py-6 px-4 mt-12 border-t border-slate-900 text-center text-[11px] space-y-1.5">
+                        <strong className="text-slate-400 block">© 2026 SMK Harapan Siswa Bogor</strong>
+                        <p className="max-w-md mx-auto text-slate-600 leading-relaxed">Media pembelajaran digital IPS kelas X mandiri dengan kuis interaktif, flashcards, dan infografis. Berjalan 100% offline & client-side.</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Render React App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
