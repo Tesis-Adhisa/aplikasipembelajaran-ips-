@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPS Harapan Siswa - Media Pembelajaran Mandiri</title>
+    
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM CDN (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel CDN (For JSX compilation in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom animations & perspectives for 3D flashcards */
+        .perspective {
+            perspective: 1000px;
+        }
+        /* Custom scrollbar for glossary */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <!-- Mounting point for React App -->
+    <div id="root"></div>
+
+    <!-- React Code starts here -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 1. DATA DATABASE IPS OFFLINE
+        const IPS_SUBJECTS = [
+            {
+                id: "sosiologi",
+                name: "Sosiologi",
+                icon: "users",
+                headerColor: "bg-purple-600",
+                topics: [
+                    {
+                        id: "interaksi-sosial",
+                        title: "Pengantar Interaksi Sosial di Masyarakat",
+                        duration: "10 Menit",
+                        content: [
+                            "Interaksi sosial adalah hubungan timbal balik yang dinamis antara individu dengan individu, individu dengan kelompok, maupun kelompok dengan kelompok lain di dalam masyarakat. Menurut sosiolog, manusia adalah makhluk 'Zoon Politikon' yang artinya tidak dapat hidup sendiri tanpa bantuan orang lain.",
+                            "Syarat terjadinya interaksi sosial yang sah ada dua, yaitu Kontak Sosial dan Komunikasi. Kontak sosial dapat berupa kontak fisik langsung maupun tidak langsung lewat media perantara. Sedangkan komunikasi berarti adanya pengiriman pesan dari komunikator yang dapat dipahami maknanya secara jelas oleh komunikan.",
+                            "Proses interaksi sosial terbagi menjadi dua sifat utama, yaitu Asosiatif (mengarah pada persatuan dan kerja sama, seperti asimilasi, akomodasi, dan gotong royong) serta Disosiatif (mengarah pada konflik, kompetisi, dan pertikaian di lingkungan sosial)."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah syarat utama agar suatu hubungan sosial dapat disebut sebagai interaksi sosial?",
+                                options: [
+                                    "Adanya kontak sosial dan adanya proses komunikasi yang saling dipahami",
+                                    "Kedua belah pihak harus memiliki status sosial dan ekonomi yang sama",
+                                    "Pertemuan secara langsung secara fisik di satu lokasi geografis",
+                                    "Adanya pembagian keuntungan finansial yang merata"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Syarat mutlak interaksi sosial dalam sosiologi adalah kontak sosial (hubungan awal) dan komunikasi (penyampaian pesan yang dipahami)."
+                            },
+                            {
+                                question: "Manakah di bawah ini yang merupakan contoh proses interaksi sosial asosiatif?",
+                                options: [
+                                    "Persaingan perebutan piala juara kelas",
+                                    "Gotong royong warga membersihkan saluran air lingkungan",
+                                    "Kontravensi terselubung antar pengurus kelas",
+                                    "Pertikaian fisik memperebutkan wilayah parkir"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Gotong royong adalah bentuk kerja sama (akomodasi/asosiatif) yang mendorong integrasi dan kerukunan warga."
+                            },
+                            {
+                                question: "Apa arti istilah 'Zoon Politikon' yang dikemukakan Aristoteles?",
+                                options: [
+                                    "Manusia adalah makhluk yang takut perubahan sosial",
+                                    "Manusia adalah makhluk yang tidak suka bergaul",
+                                    "Manusia pada kodratnya adalah makhluk sosial yang selalu hidup bermasyarakat",
+                                    "Manusia adalah penguasa mutlak rantai makanan ekosistem"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Zoon Politikon merujuk pada kodrat manusia sebagai makhluk sosial yang selalu membutuhkan orang lain dan hidup dalam kelompok."
+                            }
+                        ]
+                    },
+                    {
+                        id: "nilai-norma-sosial",
+                        title: "Eksplorasi Nilai dan Norma Sosial",
+                        duration: "12 Menit",
+                        content: [
+                            "Nilai sosial adalah konsepsi abstrak tentang apa yang dianggap baik, berharga, dan diinginkan oleh masyarakat. Sedangkan Norma Sosial adalah aturan nyata berupa perintah dan larangan yang mengikat anggota masyarakat agar nilai-nilai luhur tersebut dapat berjalan dalam kehidupan sehari-hari.",
+                            "Berdasarkan daya ikatnya di masyarakat, norma sosial dibagi menjadi empat tingkatan hierarki dari yang terlemah hingga terkuat: Cara (Usage), Kebiasaan (Folkways), Tata Kelakuan (Mores), dan Adat Istiadat (Customs).",
+                            "Melanggar norma tingkat 'Cara' seperti bersendawa kencang saat makan biasanya hanya akan mendapat cemoohan ringan. Namun, melanggar norma tingkat 'Adat Istiadat' dapat mendatangkan denda adat besar, pengucilan sosial, hingga sanksi moral luar biasa dari seluruh warga."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah perbedaan mendasar antara Nilai Sosial dan Norma Sosial?",
+                                options: [
+                                    "Nilai sosial bersifat memaksa sedangkan norma sosial bersifat sukarela",
+                                    "Nilai adalah pedoman abstrak tentang apa yang baik, sedangkan norma adalah aturan nyata dengan sanksi pengikat",
+                                    "Norma sosial diciptakan oleh pemerintah sedangkan nilai dibuat oleh kepala suku",
+                                    "Nilai sosial hanya berlaku untuk orang dewasa saja"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Nilai adalah gagasan atau konsep ideal (misal: kejujuran), sedangkan norma adalah aturan konkret untuk menegakkan nilai tersebut (misal: dilarang menyontek saat kuis)."
+                            },
+                            {
+                                question: "Norma yang memiliki daya ikat paling kuat dan turun-temurun di dalam masyarakat sosiologi disebut...",
+                                options: [
+                                    "Cara (Usage)",
+                                    "Kebiasaan (Folkways)",
+                                    "Adat Istiadat (Customs)",
+                                    "Tata Kelakuan (Mores)"
+                                ]
+                                ,
+                                correctAnswer: 2,
+                                explanation: "Adat Istiadat (Customs) adalah norma dengan kekuatan sanksi adat paling berat, sakral, dan mengikat anggota komunitasnya secara turun-temurun."
+                            },
+                            {
+                                question: "Membungkukkan badan saat berjalan melewati guru atau orang tua merupakan pelanggaran norma tingkat apa jika diabaikan?",
+                                options: [
+                                    "Kebiasaan (Folkways)",
+                                    "Adat Istiadat (Customs)",
+                                    "Hukum formal tertulis",
+                                    "Tata kelakuan resmi"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Menghormati orang yang lebih tua dengan membungkuk adalah bagian dari Kebiasaan (Folkways) yang dianggap sopan dan berulang-ulang di masyarakat Indonesia."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "geografi",
+                name: "Geografi",
+                icon: "globe",
+                headerColor: "bg-teal-600",
+                topics: [
+                    {
+                        id: "peta-penginderaan-jauh",
+                        title: "Peta, Citra Satelit, dan Penginderaan Jauh",
+                        duration: "15 Menit",
+                        content: [
+                            "Penginderaan Jauh (Remote Sensing) adalah seni dan ilmu untuk memperoleh data informasi suatu objek di permukaan bumi dari jarak jauh tanpa menyentuh fisik objek secara langsung. Alat perekam ini biasanya dipasang pada balon udara, pesawat terbang, drone, atau satelit luar angkasa.",
+                            "Sistem ini bekerja dengan memanfaatkan pantulan gelombang elektromagnetik dari sumber tenaga (seperti cahaya matahari) yang dipantulkan kembali oleh permukaan tanah, vegetasi hutan, atau permukaan air sungai. Pantulan energi ini kemudian direkam oleh sensor satelit dan diolah komputer menjadi data visual bernama Citra Satelit.",
+                            "Bagi siswa vokasi, ilmu pemetaan dan penginderaan jauh sangat penting dalam menganalisis tata ruang wilayah, memetakan potensi bencana geologi, memantau kawasan industri, hingga navigasi transportasi logistik modern berbasis koordinat GPS."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah yang dimaksud dengan Citra Satelit dalam penginderaan jauh?",
+                                options: [
+                                    "Gambar lukisan manual tentang permukaan bumi",
+                                    "Hasil rekaman visual permukaan bumi berupa foto digital yang ditangkap oleh sensor satelit luar angkasa",
+                                    "Peta topografi kuno yang digambar di atas kulit hewan",
+                                    "Sinyal radio frekuensi tinggi dari menara pemancar bumi"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Citra Satelit adalah representasi visual permukaan bumi yang dihasilkan dari sensor satelit yang mengorbit bumi."
+                            },
+                            {
+                                question: "Manakah yang merupakan fungsi utama dari Skala Peta?",
+                                options: [
+                                    "Menentukan warna keindahan peta",
+                                    "Sebagai rasio perbandingan jarak pada lembar kertas peta dengan jarak sesungguhnya di lapangan permukaan bumi",
+                                    "Menunjukkan arah mata angin utara",
+                                    "Menghitung jumlah penduduk di wilayah pemetaan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Skala peta (contoh: 1:100.000) adalah rasio matematis yang membandingkan jarak di kertas peta dengan jarak riil di lapangan."
+                            },
+                            {
+                                question: "Sumber tenaga alami yang paling utama digunakan dalam sistem penginderaan jauh pasif adalah...",
+                                options: [
+                                    "Lampu sorot laser berkekuatan tinggi",
+                                    "Pancaran gelombang mikro buatan satelit",
+                                    "Radiasi energi cahaya matahari",
+                                    "Panas bumi geothermal"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Sistem penginderaan jauh pasif mengandalkan energi alami pantulan sinar matahari pada siang hari."
+                            }
+                        ]
+                    },
+                    {
+                        id: "langkah-penelitian-geografi",
+                        title: "Metodologi & Langkah Penelitian Geografi",
+                        duration: "12 Menit",
+                        content: [
+                            "Penelitian geografi memiliki karakteristik khas yang membedakannya dengan sains lainnya, yaitu fokus pada tiga pendekatan utama: Pendekatan Spasial (keruangan), Pendekatan Ekologis (lingkungan hidup), dan Pendekatan Kompleks Wilayah (kombinasi keduanya).",
+                            "Langkah awal penelitian dimulai dengan merumuskan masalah konkrit di geosfer, seperti longsor lahan di kawasan puncak Bogor, polusi udara perkotaan, atau banjir luapan sungai Ciliwung. Selanjutnya, peneliti menyusun hipotesis ilmiah dan melakukan pengumpulan data.",
+                            "Pengumpulan data geografi wajib mengombinasikan data sekunder (dari citra satelit atau data instansi) dengan data primer (pengamatan langsung ke lapangan yang disebut Ground Truth), agar kesimpulan dan rekomendasi pelestarian lingkungan akurat."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah yang membedakan penelitian geografi dengan disiplin sains sosial lainnya?",
+                                options: [
+                                    "Hanya berfokus pada sejarah kuno bumi",
+                                    "Penggunaan analisis pendekatan spasial (keruangan) dan ekologis",
+                                    "Metode penelitian yang tidak menggunakan data statistik",
+                                    "Hanya meneliti perilaku manusia di dalam ruang tertutup"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Ciri khas geografi adalah analisis spasial (distribusi ruang) dan ekologis (hubungan timbal balik makhluk hidup dengan lingkungan alamnya)."
+                            },
+                            {
+                                question: "Mengapa peneliti geografi wajib melakukan proses 'Ground Truth'?",
+                                options: [
+                                    "Untuk berwisata alam secara gratis di lokasi penelitian",
+                                    "Memvalidasi dan membuktikan keakuratan data sekunder citra satelit dengan kondisi riil di lapangan",
+                                    "Membeli contoh batuan vulkanik langka",
+                                    "Mengukur kedalaman inti bumi secara manual"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Ground Truth adalah metode verifikasi langsung ke lapangan untuk memastikan data citra satelit cocok dengan fakta sebenarnya."
+                            },
+                            {
+                                question: "Pendekatan geografi yang mengkaji interaksi timbal balik manusia dengan ekosistem lingkungannya disebut pendekatan...",
+                                options: [
+                                    "Pendekatan Spasial (Keruangan)",
+                                    "Pendekatan Ekologis (Kelingkungan)",
+                                    "Pendekatan Sejarah Kronologis",
+                                    "Pendekatan Statistik Matematika"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pendekatan ekologis (lingkungan) mengkaji interaksi timbal balik aktivitas manusia dengan kondisi fisik ekosistem tempat tinggalnya."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ekonomi",
+                name: "Ekonomi",
+                icon: "trending-up",
+                headerColor: "bg-emerald-600",
+                topics: [
+                    {
+                        id: "konsep-dasar-ekonomi",
+                        title: "Konsep Kelangkaan dan Skala Prioritas",
+                        duration: "10 Menit",
+                        content: [
+                            "Ekonomi berasal dari bahasa Yunani kuno 'Oikonomia' yang artinya aturan rumah tangga. Inti masalah utama ekonomi adalah adanya Kelangkaan (Scarcity), yaitu situasi tidak seimbang di mana keinginan dan kebutuhan manusia tidak terbatas, sedangkan sumber daya pemuas kebutuhan sangat terbatas.",
+                            "Karena kelangkaan ini, manusia dipaksa untuk membuat keputusan rasional dengan menyusun Skala Prioritas. Skala prioritas mengurutkan kebutuhan dari yang paling mendesak (primer), penting (sekunder), hingga yang bisa ditunda (tersier).",
+                            "Ketika kita memilih suatu alternatif pilihan ekonomi, kita otomatis mengorbankan manfaat dari pilihan alternatif terbaik lainnya. Nilai dari pengorbanan alternatif terbaik yang dilewatkan ini disebut sebagai Biaya Peluang (Opportunity Cost)."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah penyebab utama timbulnya masalah kelangkaan (scarcity) ekonomi?",
+                                options: [
+                                    "Suku bunga bank nasional yang terlampau tinggi",
+                                    "Ketidakseimbangan antara kebutuhan manusia yang tidak terbatas dengan alat pemuas yang terbatas",
+                                    "Kegagalan sistem distribusi barang impor pemerintah",
+                                    "Menurunnya daya beli mata uang asing"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Kelangkaan muncul karena kebutuhan manusia bersifat tanpa batas, namun sumber daya alam, modal, dan waktu di bumi sangat terbatas."
+                            },
+                            {
+                                question: "Apakah yang dimaksud dengan Biaya Peluang (Opportunity Cost)?",
+                                options: [
+                                    "Total seluruh pengeluaran belanja harian rumah tangga",
+                                    "Nilai dari alternatif pilihan terbaik lain yang terpaksa dikorbankan karena memilih keputusan saat ini",
+                                    "Diskon khusus yang didapatkan saat membeli barang grosir",
+                                    "Biaya denda keterlambatan pembayaran pajak negara"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Biaya Peluang adalah manfaat atau opportunity dari alternatif terbaik kedua yang terpaksa kita lepaskan demi mengambil keputusan ekonomi saat ini."
+                            },
+                            {
+                                question: "Langkah rasional apa yang wajib disusun manusia untuk mengatasi kelangkaan?",
+                                options: [
+                                    "Membeli semua barang mewah secara berhutang",
+                                    "Menyusun Skala Prioritas kebutuhan hidup berdasarkan tingkat urgensi utama",
+                                    "Menolak melakukan transaksi ekonomi apapun",
+                                    "Mengandalkan bantuan sosial pemerintah selamanya"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Menyusun skala prioritas membantu individu memilah kebutuhan penting mendesak terlebih dahulu untuk diakomodasi dengan sumber daya terbatas."
+                            }
+                        ]
+                    },
+                    {
+                        id: "sistem-ekonomi-indonesia",
+                        title: "Mengenal Sistem Demokrasi Ekonomi Pancasila",
+                        duration: "12 Menit",
+                        content: [
+                            "Sistem Ekonomi yang dianut bangsa Indonesia didasarkan pada landasan konstitusional Pasal 33 UUD 1945, yang dikenal sebagai Sistem Demokrasi Ekonomi Pancasila. Sistem ini menekankan bahwa perekonomian disusun sebagai usaha bersama berdasar atas asas kekeluargaan.",
+                            "Dalam sistem ini, terdapat tiga pilar utama pelaku ekonomi nasional: Badan Usaha Milik Negara/Daerah (BUMN/BUMD) yang menguasai sektor produksi vital publik, Badan Usaha Milik Swasta (BUMS) yang dinamis, serta Koperasi sebagai soko guru ekonomi rakyat.",
+                            "Tujuan utama Demokrasi Ekonomi Pancasila adalah mencegah dominasi monopoli swasta ekstrem (free fight liberalism) maupun penguasaan mutlak otoriter negara (etatisme), demi terciptanya keadilan sosial bagi seluruh rakyat."
+                        ],
+                        quiz: [
+                            {
+                                        question: "Landasan konstitusional utama pelaksanaan sistem ekonomi di Indonesia diatur dalam...",
+                                options: [
+                                    "UUD 1945 Pasal 27 ayat 2",
+                                    "UUD 1945 Pasal 33",
+                                    "Pancasila Sila Kedua saja",
+                                    "Ketetapan MPR tentang ekspor impor"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pasal 33 UUD 1945 merupakan pilar konstitusional utama yang mendasari dan mengatur asas kekeluargaan dalam sistem ekonomi Indonesia."
+                            },
+                            {
+                                question: "Mengapa Koperasi dijuluki sebagai 'Soko Guru' perekonomian Indonesia?",
+                                options: [
+                                    "Karena koperasi didirikan khusus oleh guru-guru sekolah",
+                                    "Konsep usaha koperasi mengutamakan asas kekeluargaan, gotong royong, dan kesejahteraan bersama anggotanya",
+                                    "Koperasi memiliki cabang modal terbesar melebihi swasta asing",
+                                    "Koperasi diawasi langsung oleh organisasi bank dunia"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Koperasi disebut soko guru (tiang utama) karena struktur usahanya sangat mencerminkan jiwa gotong-royong dan asas kekeluargaan nasional."
+                            },
+                            {
+                                question: "Sistem ekonomi Indonesia melarang dominasi monopoli kapitalis barat yang ekstrem yang dikenal dengan nama...",
+                                options: [
+                                    "Etatisme absolut",
+                                    "Sistem Ekonomi Pasar Terpusat",
+                                    "Free Fight Liberalism (Persaingan Bebas Ekstrem)",
+                                    "Ekonomi Berkelanjutan"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Free Fight Liberalism dilarang karena merusak asas keadilan sosial dengan membiarkan pengusaha raksasa mematikan ekonomi usaha rakyat kecil."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "sejarah",
+                name: "Sejarah Indonesia",
+                icon: "history",
+                headerColor: "bg-orange-600",
+                topics: [
+                    {
+                        id: "manusia-purba",
+                        title: "Evolusi Kehidupan Manusia Praaksara",
+                        duration: "10 Menit",
+                        content: [
+                            "Masa Praaksara adalah periodisasi sejarah kuno di mana leluhur manusia belum mengenal sistem tulisan. Nusantara merupakan salah satu wilayah penemuan fosil manusia purba terkaya di dunia, seperti Meganthropus paleojavanicus, Pithecanthropus erectus, hingga Homo sapiens.",
+                            "Kehidupan sosial manusia purba mengalami evolusi cara bertahan hidup yang luar biasa. Berawal dari Masa Berburu dan Meramu (Food Gathering) yang berpindah-pindah tempat tinggal (Nomaden) mengikuti migrasi hewan buruan dan sumber buah-buahan di alam.",
+                            "Evolusi berlanjut ke Masa Bercocok Tanam (Food Producing), di mana manusia mulai hidup menetap secara teratur (Sedenter), mendirikan perkampungan gotong royong awal, bercocok tanam padi, serta memelihara hewan ternak guna bertahan hidup jangka panjang."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apakah perbedaan mendasar antara pola hidup Nomaden dengan Sedenter?",
+                                options: [
+                                    "Nomaden berarti berburu di laut sedangkan sedenter berburu di darat",
+                                    "Nomaden adalah pola hidup berpindah-pindah tempat tinggal, sedangkan sedenter berarti hidup menetap di suatu wilayah",
+                                    "Nomaden hanya berlaku untuk suku pedalaman di luar pulau Jawa",
+                                    "Nomaden memakan tumbuhan sedangkan sedenter hanya memakan daging hewan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Nomaden berpindah tempat tinggal mengikuti insting ketersediaan pangan alam, sedangkan Sedenter mulai menetap karena sudah bisa bercocok tanam."
+                            },
+                            {
+                                question: "Manakah corak kehidupan ekonomi purba yang paling awal berkembang?",
+                                options: [
+                                    "Masa perdagangan logam perunggu antar pulau",
+                                    "Masa bercocok tanam padi modern di ladang",
+                                    "Masa berburu binatang dan mengumpulkan buah-buahan liar di hutan (Food Gathering)",
+                                    "Masa perundagian spesialis pembuat kapal layar"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Corak ekonomi paling dasar manusia praaksara adalah Food Gathering (berburu dan meramu) langsung dari alam bebas."
+                            },
+                            {
+                                question: "Siapakah ilmuwan terkenal yang menemukan fosil 'Pithecanthropus erectus' di daerah Trinil, Jawa Tengah?",
+                                options: [
+                                    "Eugene Dubois",
+                                    "G.H.R. von Koenigswald",
+                                    "Prof. Dr. Teuku Jacob",
+                                    "Alfred Russel Wallace"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Fosil 'Pithecanthropus erectus' (manusia kera berdiri tegak) ditemukan oleh peneliti asal Belanda Eugene Dubois pada tahun 1891."
+                            }
+                        ]
+                    },
+                    {
+                        id: "kerajaan-hindu-buddha",
+                        title: "Kerajaan Hindu-Buddha & Prasasti Bogor",
+                        duration: "12 Menit",
+                        content: [
+                            "Masuknya kebudayaan Hindu-Buddha dari India melalui jalur perdagangan maritim mengubah tatanan sosial politik Nusantara dari sistem kepala suku menjadi sistem Kerajaan Monarki bercorak Hindu-Buddha yang megah.",
+                            "Khusus wilayah Bogor, pada abad ke-4 hingga ke-7 Masehi berkembang Kerajaan Tarumanegara yang dipimpin oleh raja agung termasyhur bernama Raja Purnawarman. Bukti peninggalan kemegahan kerajaan ini diabadikan dalam 7 prasasti batu tulis kuno.",
+                            "Di antaranya yang ditemukan di Bogor adalah Prasasti Ciaruteun (memuat cetakan sepasang telapak kaki Raja Purnawarman bagai kaki Dewa Wisnu), Prasasti Kebon Kopi (cetakan kaki gajah Airawata tunggangan Dewa Indra), dan Prasasti Jambu yang memuji kegagahan raja dalam perang."
+                        ],
+                        quiz: [
+                            {
+                                question: "Prasasti legendaris peninggalan Kerajaan Tarumanegara yang memuat cetakan tapak kaki Raja Purnawarman bagai Dewa Wisnu adalah...",
+                                options: [
+                                    "Prasasti Kebon Kopi",
+                                    "Prasasti Ciaruteun",
+                                    "Prasasti Jambu (Pasir Koleangkak)",
+                                    "Prasasti Tugu Jakarta"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Prasasti Ciaruteun memuat cap kaki Raja Purnawarman sebagai lambang keagungan dan perlindungan rakyatnya bagai Dewa Wisnu."
+                            },
+                            {
+                                question: "Di kota manakah episentrum penemuan prasasti-prasasti Kerajaan Tarumanegara terbanyak ditemukan?",
+                                options: [
+                                    "Surabaya",
+                                    "Bogor, Jawa Barat",
+                                    "Denpasar, Bali",
+                                    "Medan, Sumatra Utara"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Situs-situs prasasti Tarumanegara (seperti Ciaruteun, Kebon Kopi, Jambu) berlokasi di daerah aliran sungai Kabupaten Bogor, Jawa Barat."
+                            },
+                            {
+                                question: "Apakah makna dari ukiran telapak kaki raja pada prasasti batu kuno tersebut?",
+                                options: [
+                                    "Sebagai batas penanda ukuran alas kaki kerajaan",
+                                    "Lambang kepemilikan mutlak wilayah kekuasaan serta tanda penghormatan raja bagai dewa pelindung bumi",
+                                    "Seni dekorasi hiasan batu tulis semata",
+                                    "Instruksi jalur navigasi berjalan kaki bagi prajurit"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Cap kaki melambangkan legitimasi kekuasaan spiritual raja atas wilayah tanah tersebut laksana dewa penguasa."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const IPS_SUBJECTS_XI = [
+            {
+                id: "sosiologi",
+                name: "Sosiologi",
+                icon: "users",
+                headerColor: "bg-purple-600",
+                topics: [
+                    {
+                        id: "masalah-sosial-masyarakat",
+                        title: "Ragam Masalah Sosial di Tengah Masyarakat",
+                        duration: "12 Menit",
+                        content: [
+                            "Masalah sosial muncul ketika terjadi ketidaksesuaian antara unsur-unsur kebudayaan atau masyarakat sehingga membahayakan kehidupan kelompok sosial. Faktor penyebabnya beragam, mulai dari faktor ekonomi (kemiskinan, pengangguran), faktor budaya (perceraian, kenakalan remaja), faktor biologis (wabah penyakit), hingga faktor psikologis (bunuh diri, gangguan mental akibat tekanan sosial).",
+                            "Kemiskinan sebagai salah satu masalah sosial paling nyata dibedakan menjadi dua jenis. Kemiskinan Absolut adalah kondisi ketika pendapatan seseorang berada di bawah garis kebutuhan minimum untuk hidup layak. Sedangkan Kemiskinan Relatif adalah kondisi ketika seseorang sebenarnya sudah berada di atas garis kemiskinan, namun masih tergolong miskin dibandingkan standar hidup masyarakat sekitarnya.",
+                            "Penanggulangan masalah sosial dilakukan melalui dua pendekatan utama: Preventif (pencegahan sebelum masalah muncul, seperti penyuluhan dan pendidikan vokasi keterampilan kerja) dan Represif (tindakan setelah masalah terjadi, seperti penegakan hukum dan rehabilitasi sosial). Sebagai calon tenaga kerja terampil, siswa SMK diharapkan turut berperan aktif mengurangi angka pengangguran di lingkungan sekitarnya."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apa yang dimaksud dengan masalah sosial menurut kajian sosiologi?",
+                                options: [
+                                    "Perbedaan pendapat antar individu yang bersifat sementara",
+                                    "Ketidaksesuaian antara unsur-unsur kebudayaan/masyarakat yang membahayakan kehidupan kelompok sosial",
+                                    "Kegiatan ekonomi yang dilakukan oleh sekelompok pengusaha",
+                                    "Persaingan sehat antar pelajar dalam meraih prestasi akademik"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Masalah sosial adalah ketidaksesuaian unsur budaya/masyarakat yang mengganggu keseimbangan dan membahayakan kehidupan kelompok sosial."
+                            },
+                            {
+                                question: "Seseorang yang penghasilannya berada di bawah garis kebutuhan minimum untuk hidup layak disebut mengalami...",
+                                options: [
+                                    "Kemiskinan Relatif",
+                                    "Kemiskinan Absolut",
+                                    "Kemiskinan Struktural sementara",
+                                    "Disorganisasi ekonomi keluarga"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Kemiskinan Absolut diukur dari standar kebutuhan minimum hidup layak (garis kemiskinan), berbeda dengan kemiskinan relatif yang bersifat perbandingan sosial."
+                            },
+                            {
+                                question: "Penyuluhan dan pelatihan keterampilan kerja bagi remaja putus sekolah merupakan contoh upaya penanggulangan masalah sosial secara...",
+                                options: [
+                                    "Represif",
+                                    "Kuratif setelah masalah membesar",
+                                    "Preventif",
+                                    "Punitif melalui hukuman"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Preventif adalah upaya pencegahan sebelum masalah sosial muncul atau membesar, seperti pendidikan dan pelatihan keterampilan."
+                            }
+                        ]
+                    },
+                    {
+                        id: "konflik-integrasi-sosial",
+                        title: "Konflik Sosial dan Proses Integrasi Bangsa",
+                        duration: "12 Menit",
+                        content: [
+                            "Konflik sosial adalah proses pertentangan antara individu atau kelompok yang timbul karena adanya perbedaan kepentingan, tujuan, nilai, maupun persepsi mengenai suatu hal. Konflik bukan selalu berkonotasi negatif, karena dalam batas tertentu konflik dapat mendorong perubahan sosial ke arah yang lebih baik.",
+                            "Berdasarkan dampaknya, konflik dibedakan menjadi Konflik Konstruktif (menghasilkan kesepakatan baru yang memperkuat solidaritas kelompok, misalnya perdebatan sehat dalam musyawarah) dan Konflik Destruktif (merusak keutuhan kelompok, memicu kekerasan, dan perpecahan sosial).",
+                            "Integrasi sosial adalah proses penyatuan unsur-unsur masyarakat yang berbeda menjadi satu kesatuan yang utuh dan serasi. Faktor pendukung integrasi antara lain sikap toleransi antar suku dan agama, kesempatan yang seimbang dalam bidang ekonomi, serta sikap saling menghargai perbedaan budaya di lingkungan sekolah maupun masyarakat."
+                        ],
+                        quiz: [
+                            {
+                                question: "Konflik sosial pada dasarnya muncul karena adanya...",
+                                options: [
+                                    "Persamaan kepentingan antar kelompok masyarakat",
+                                    "Perbedaan kepentingan, tujuan, atau nilai antar individu maupun kelompok",
+                                    "Kesepakatan bersama dalam sebuah organisasi",
+                                    "Kerja sama lintas suku yang harmonis"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Konflik sosial lahir dari perbedaan kepentingan, tujuan, atau nilai yang dipegang oleh pihak-pihak yang berinteraksi."
+                            },
+                            {
+                                question: "Perdebatan sehat dalam forum musyawarah kelas yang menghasilkan kesepakatan baru dan mempererat kekompakan kelas adalah contoh konflik yang bersifat...",
+                                options: [
+                                    "Destruktif",
+                                    "Konstruktif",
+                                    "Struktural permanen",
+                                    "Vertikal antar generasi"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Konflik Konstruktif justru menghasilkan manfaat positif berupa penguatan solidaritas dan kesepakatan baru bagi kelompok."
+                            },
+                            {
+                                question: "Manakah faktor yang paling mendukung terciptanya integrasi sosial di lingkungan yang beragam suku dan agama?",
+                                options: [
+                                    "Sikap fanatisme sempit terhadap kelompok sendiri",
+                                    "Sikap toleransi dan saling menghargai perbedaan budaya",
+                                    "Persaingan ketat memperebutkan sumber daya terbatas",
+                                    "Pembatasan interaksi antar kelompok berbeda"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Toleransi dan sikap saling menghargai perbedaan adalah fondasi utama terciptanya integrasi sosial yang harmonis."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "geografi",
+                name: "Geografi",
+                icon: "globe",
+                headerColor: "bg-teal-600",
+                topics: [
+                    {
+                        id: "dinamika-kependudukan",
+                        title: "Dinamika dan Permasalahan Kependudukan Indonesia",
+                        duration: "13 Menit",
+                        content: [
+                            "Dinamika kependudukan adalah perubahan jumlah penduduk suatu wilayah dari waktu ke waktu yang dipengaruhi oleh tiga faktor utama: Natalitas (kelahiran), Mortalitas (kematian), dan Migrasi (perpindahan penduduk). Ketiga faktor ini saling memengaruhi pertumbuhan penduduk suatu negara secara alami maupun sosial.",
+                            "Indonesia menghadapi permasalahan kependudukan berupa persebaran penduduk yang tidak merata, di mana Pulau Jawa yang luasnya hanya sekitar 7% dari total wilayah Indonesia justru dihuni oleh lebih dari separuh total penduduk nasional. Fenomena Urbanisasi, yaitu perpindahan penduduk dari desa menuju kota untuk mencari pekerjaan, turut memperparah kepadatan penduduk perkotaan.",
+                            "Untuk mengatasi ketimpangan ini, pemerintah menjalankan program Transmigrasi (pemindahan penduduk dari wilayah padat ke wilayah yang lebih jarang penduduknya) serta program Keluarga Berencana (KB) untuk mengendalikan laju pertumbuhan penduduk agar pembangunan dapat berjalan lebih merata di seluruh wilayah Nusantara."
+                        ],
+                        quiz: [
+                            {
+                                question: "Manakah tiga faktor utama yang memengaruhi dinamika jumlah penduduk suatu wilayah?",
+                                options: [
+                                    "Natalitas, Mortalitas, dan Migrasi",
+                                    "Inflasi, Deflasi, dan Investasi",
+                                    "Iklim, Cuaca, dan Curah hujan",
+                                    "Pendidikan, Kesehatan, dan Ekonomi semata"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Dinamika penduduk dipengaruhi oleh angka kelahiran (natalitas), angka kematian (mortalitas), dan perpindahan penduduk (migrasi)."
+                            },
+                            {
+                                question: "Perpindahan penduduk dari desa menuju kota untuk mencari pekerjaan disebut...",
+                                options: [
+                                    "Transmigrasi",
+                                    "Ruralisasi",
+                                    "Urbanisasi",
+                                    "Emigrasi internasional"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Urbanisasi adalah perpindahan penduduk dari desa ke kota, umumnya didorong oleh peluang ekonomi dan lapangan kerja yang lebih luas."
+                            },
+                            {
+                                question: "Apa tujuan utama program Transmigrasi yang dijalankan pemerintah Indonesia?",
+                                options: [
+                                    "Menambah kepadatan penduduk di Pulau Jawa",
+                                    "Memindahkan penduduk dari wilayah padat ke wilayah yang lebih jarang penduduknya demi pemerataan pembangunan",
+                                    "Mengurangi jumlah kelahiran bayi secara nasional",
+                                    "Menghentikan seluruh migrasi penduduk antar pulau"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Transmigrasi bertujuan memeratakan persebaran penduduk sekaligus mendorong pembangunan di wilayah yang masih jarang penduduknya."
+                            }
+                        ]
+                    },
+                    {
+                        id: "sda-pembangunan-berkelanjutan",
+                        title: "Sumber Daya Alam dan Pembangunan Berkelanjutan",
+                        duration: "13 Menit",
+                        content: [
+                            "Sumber Daya Alam (SDA) dibedakan menjadi dua kategori utama, yaitu SDA yang dapat diperbarui (Renewable) seperti hutan, air, dan hasil pertanian, serta SDA yang tidak dapat diperbarui (Non-Renewable) seperti minyak bumi, batu bara, dan mineral tambang yang jumlahnya terbatas di alam.",
+                            "Eksploitasi SDA secara berlebihan tanpa memperhatikan kelestarian lingkungan dapat menimbulkan Degradasi Lingkungan, yaitu penurunan kualitas dan daya dukung lingkungan akibat kerusakan ekosistem, seperti deforestasi hutan, pencemaran sungai, dan abrasi pantai akibat penambangan pasir laut yang tidak terkendali.",
+                            "Pembangunan Berkelanjutan adalah prinsip pembangunan yang berupaya memenuhi kebutuhan generasi masa kini tanpa mengorbankan kemampuan generasi mendatang dalam memenuhi kebutuhannya sendiri. Prinsip ini menekankan keseimbangan antara pertumbuhan ekonomi, kelestarian lingkungan, dan kesejahteraan sosial masyarakat."
+                        ],
+                        quiz: [
+                            {
+                                question: "Manakah contoh Sumber Daya Alam yang tidak dapat diperbarui (Non-Renewable)?",
+                                options: [
+                                    "Hasil hutan kayu jati",
+                                    "Air sungai dan hujan",
+                                    "Minyak bumi dan batu bara",
+                                    "Hasil panen padi sawah"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Minyak bumi dan batu bara terbentuk melalui proses geologis jutaan tahun sehingga tergolong SDA yang tidak dapat diperbarui."
+                            },
+                            {
+                                question: "Penurunan kualitas dan daya dukung lingkungan akibat eksploitasi berlebihan disebut...",
+                                options: [
+                                    "Konservasi lingkungan",
+                                    "Reklamasi pantai",
+                                    "Degradasi Lingkungan",
+                                    "Reboisasi hutan"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Degradasi lingkungan terjadi ketika eksploitasi SDA dilakukan tanpa memperhatikan prinsip kelestarian ekosistem."
+                            },
+                            {
+                                question: "Inti dari prinsip Pembangunan Berkelanjutan (Sustainable Development) adalah...",
+                                options: [
+                                    "Memaksimalkan keuntungan ekonomi jangka pendek tanpa batas",
+                                    "Memenuhi kebutuhan generasi sekarang tanpa mengorbankan kemampuan generasi mendatang memenuhi kebutuhannya",
+                                    "Menghentikan seluruh aktivitas eksploitasi sumber daya alam",
+                                    "Memprioritaskan pembangunan hanya di kawasan perkotaan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pembangunan berkelanjutan menyeimbangkan kebutuhan ekonomi masa kini dengan kelestarian lingkungan untuk generasi mendatang."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ekonomi",
+                name: "Ekonomi",
+                icon: "trending-up",
+                headerColor: "bg-emerald-600",
+                topics: [
+                    {
+                        id: "ketenagakerjaan-pembangunan-ekonomi",
+                        title: "Ketenagakerjaan dan Pembangunan Ekonomi",
+                        duration: "12 Menit",
+                        content: [
+                            "Tenaga Kerja adalah setiap orang yang mampu melakukan pekerjaan untuk menghasilkan barang atau jasa. Sedangkan Angkatan Kerja adalah bagian dari tenaga kerja berusia produktif (15-64 tahun) yang sedang bekerja atau sedang mencari pekerjaan secara aktif.",
+                            "Masalah ketenagakerjaan di Indonesia meliputi tingginya angka Pengangguran Terbuka (orang yang aktif mencari kerja namun belum mendapatkannya), rendahnya upah tenaga kerja tidak terampil, serta kesenjangan keterampilan (skill gap) antara lulusan pendidikan dengan kebutuhan industri modern. Pendidikan vokasi SMK berperan penting menjembatani kesenjangan ini.",
+                            "Keberhasilan pembangunan ekonomi suatu negara tidak hanya diukur dari pertumbuhan Produk Domestik Bruto (PDB), tetapi juga dari Indeks Pembangunan Manusia (IPM) yang mencakup dimensi kesehatan, pendidikan, dan standar hidup layak masyarakatnya secara menyeluruh."
+                        ],
+                        quiz: [
+                            {
+                                question: "Bagian dari tenaga kerja usia produktif yang sedang bekerja atau sedang aktif mencari pekerjaan disebut...",
+                                options: [
+                                    "Bukan angkatan kerja",
+                                    "Angkatan Kerja",
+                                    "Tenaga kerja terdidik saja",
+                                    "Penduduk usia lanjut"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Angkatan kerja mencakup penduduk usia produktif yang sedang bekerja maupun yang aktif mencari pekerjaan."
+                            },
+                            {
+                                question: "Seseorang yang aktif mencari pekerjaan namun belum kunjung mendapatkannya termasuk kategori...",
+                                options: [
+                                    "Setengah pengangguran",
+                                    "Pengangguran Terbuka",
+                                    "Pengangguran terselubung",
+                                    "Pekerja penuh waktu"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pengangguran terbuka adalah kondisi seseorang yang benar-benar tidak bekerja meski sedang aktif mencari pekerjaan."
+                            },
+                            {
+                                question: "Selain pertumbuhan PDB, indikator apa yang mengukur keberhasilan pembangunan ekonomi dari dimensi kesehatan, pendidikan, dan standar hidup?",
+                                options: [
+                                    "Indeks Harga Konsumen (IHK)",
+                                    "Neraca Perdagangan",
+                                    "Indeks Pembangunan Manusia (IPM)",
+                                    "Suku bunga acuan bank sentral"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "IPM mengukur kualitas pembangunan manusia melalui dimensi kesehatan, pendidikan, dan standar hidup layak."
+                            }
+                        ]
+                    },
+                    {
+                        id: "apbn-apbd-kebijakan-fiskal",
+                        title: "APBN, APBD, dan Kebijakan Fiskal",
+                        duration: "13 Menit",
+                        content: [
+                            "APBN (Anggaran Pendapatan dan Belanja Negara) adalah rencana keuangan tahunan pemerintah pusat yang berisi rencana penerimaan dan pengeluaran negara selama satu tahun anggaran. Sedangkan APBD adalah versi anggaran serupa yang disusun oleh pemerintah daerah, seperti Pemerintah Kota Bogor, untuk mengelola keuangan wilayahnya.",
+                            "APBN memiliki tiga fungsi utama, yaitu fungsi Alokasi (mengarahkan dana untuk pembangunan sarana publik seperti sekolah dan jalan), fungsi Distribusi (pemerataan pendapatan melalui subsidi dan bantuan sosial), serta fungsi Stabilisasi (menjaga kestabilan perekonomian nasional dari gejolak inflasi atau resesi).",
+                            "Kebijakan Fiskal Ekspansif adalah kebijakan pemerintah menambah pengeluaran atau menurunkan pajak untuk mendorong pertumbuhan ekonomi saat kondisi lesu. Sebaliknya, Kebijakan Fiskal Kontraktif adalah kebijakan mengurangi pengeluaran atau menaikkan pajak untuk meredam inflasi ketika perekonomian tumbuh terlalu panas."
+                        ],
+                        quiz: [
+                            {
+                                question: "Rencana keuangan tahunan yang disusun oleh pemerintah pusat disebut...",
+                                options: [
+                                    "APBD",
+                                    "APBN",
+                                    "Neraca pembayaran",
+                                    "Laporan laba rugi negara"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "APBN adalah rencana keuangan tahunan pemerintah pusat yang memuat rencana pendapatan dan belanja negara."
+                            },
+                            {
+                                question: "Fungsi APBN yang bertujuan meratakan pendapatan masyarakat melalui subsidi dan bantuan sosial disebut fungsi...",
+                                options: [
+                                    "Fungsi Alokasi",
+                                    "Fungsi Distribusi",
+                                    "Fungsi Stabilisasi",
+                                    "Fungsi regulasi pasar"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Fungsi distribusi APBN berfokus pada pemerataan pendapatan masyarakat lewat subsidi dan bantuan sosial."
+                            },
+                            {
+                                question: "Ketika perekonomian sedang lesu, pemerintah menaikkan belanja negara dan menurunkan pajak. Kebijakan ini disebut...",
+                                options: [
+                                    "Kebijakan Fiskal Kontraktif",
+                                    "Kebijakan Moneter Ketat",
+                                    "Kebijakan Fiskal Ekspansif",
+                                    "Kebijakan proteksi perdagangan"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Kebijakan fiskal ekspansif mendorong pertumbuhan ekonomi dengan menambah belanja negara dan/atau menurunkan pajak."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "sejarah",
+                name: "Sejarah Indonesia",
+                icon: "history",
+                headerColor: "bg-orange-600",
+                topics: [
+                    {
+                        id: "kolonialisme-imperialisme",
+                        title: "Kolonialisme dan Imperialisme Barat di Indonesia",
+                        duration: "13 Menit",
+                        content: [
+                            "Kolonialisme adalah paham yang bertujuan menguasai wilayah lain untuk memperluas kekuasaan suatu negara, sedangkan Imperialisme adalah upaya penjajahan untuk mendapatkan keuntungan ekonomi sebesar-besarnya dari wilayah jajahan. Kedatangan bangsa Eropa ke Nusantara diawali oleh VOC (Vereenigde Oostindische Compagnie), kongsi dagang Belanda yang memperoleh Hak Oktroi (hak istimewa) dari pemerintah Belanda.",
+                            "VOC memonopoli perdagangan rempah-rempah di Nusantara dengan cara-cara kekerasan dan politik adu domba antar kerajaan lokal. Setelah VOC bangkrut, pemerintah Hindia Belanda menerapkan kebijakan Tanam Paksa (Cultuurstelsel) yang mewajibkan rakyat menanam tanaman ekspor seperti kopi dan tebu untuk keuntungan pemerintah kolonial, mengakibatkan penderitaan rakyat yang luar biasa.",
+                            "Berbagai perlawanan rakyat daerah bermunculan menentang kesewenang-wenangan kolonial, seperti Perang Diponegoro di Jawa, Perang Padri di Sumatera Barat, dan Perang Aceh. Meski awalnya bersifat kedaerahan dan belum terorganisir secara nasional, perlawanan-perlawanan ini menjadi cikal bakal semangat kebangsaan Indonesia di kemudian hari."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apa perbedaan mendasar antara Kolonialisme dan Imperialisme?",
+                                options: [
+                                    "Kolonialisme berfokus menguasai wilayah, sedangkan imperialisme berfokus mengambil keuntungan ekonomi maksimal dari wilayah jajahan",
+                                    "Kolonialisme hanya dilakukan oleh Belanda, sedangkan imperialisme oleh Inggris",
+                                    "Keduanya adalah istilah yang sama persis tanpa perbedaan makna",
+                                    "Imperialisme terjadi sebelum kolonialisme secara kronologis"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Kolonialisme menitikberatkan penguasaan wilayah, sementara imperialisme lebih menekankan eksploitasi ekonomi dari wilayah kekuasaan tersebut."
+                            },
+                            {
+                                question: "Kebijakan yang mewajibkan rakyat menanam tanaman ekspor demi keuntungan pemerintah kolonial Belanda disebut...",
+                                options: [
+                                    "Politik Etis",
+                                    "Tanam Paksa (Cultuurstelsel)",
+                                    "Politik Pintu Terbuka",
+                                    "Sistem sewa tanah"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Cultuurstelsel atau Tanam Paksa mewajibkan sebagian lahan rakyat ditanami komoditas ekspor untuk keuntungan Belanda."
+                            },
+                            {
+                                question: "Hak istimewa yang diberikan kepada VOC oleh pemerintah Belanda, termasuk hak memonopoli dagang dan mencetak uang sendiri, disebut...",
+                                options: [
+                                    "Hak Oktroi",
+                                    "Hak Ekstirpasi",
+                                    "Hak Veto",
+                                    "Hak Preanger Stelsel"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Hak Oktroi adalah hak istimewa VOC seperti memonopoli perdagangan, mencetak uang, dan membentuk tentara sendiri."
+                            }
+                        ]
+                    },
+                    {
+                        id: "pergerakan-nasional",
+                        title: "Kebangkitan dan Pergerakan Nasional Indonesia",
+                        duration: "13 Menit",
+                        content: [
+                            "Kebangkitan Nasional ditandai dengan berdirinya organisasi Budi Utomo pada 20 Mei 1908 yang digagas oleh dr. Sutomo dan rekan-rekannya. Organisasi ini menjadi pelopor pergerakan modern karena menggunakan cara-cara terorganisir, bukan lagi perlawanan senjata kedaerahan seperti sebelumnya.",
+                            "Setelah Budi Utomo, bermunculan organisasi pergerakan lain dengan corak berbeda, seperti Sarekat Islam yang berbasis ekonomi dan keagamaan, Indische Partij yang bercorak politik radikal, hingga Perhimpunan Indonesia dan Partai Nasional Indonesia (PNI) yang secara tegas menyuarakan cita-cita kemerdekaan penuh dari penjajahan.",
+                            "Puncak persatuan pergerakan nasional terjadi pada peristiwa Sumpah Pemuda tanggal 28 Oktober 1928, di mana pemuda dari berbagai suku dan daerah bersumpah untuk bertumpah darah satu, berbangsa satu, dan berbahasa satu, yaitu Indonesia. Peristiwa ini menjadi fondasi persatuan bangsa menuju kemerdekaan."
+                        ],
+                        quiz: [
+                            {
+                                question: "Organisasi yang menjadi tonggak awal Kebangkitan Nasional Indonesia pada tahun 1908 adalah...",
+                                options: [
+                                    "Sarekat Islam",
+                                    "Budi Utomo",
+                                    "Indische Partij",
+                                    "Partai Nasional Indonesia"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Budi Utomo yang berdiri 20 Mei 1908 dianggap sebagai pelopor pergerakan nasional modern dan diperingati sebagai Hari Kebangkitan Nasional."
+                            },
+                            {
+                                question: "Apa isi pokok dari peristiwa Sumpah Pemuda 28 Oktober 1928?",
+                                options: [
+                                    "Kesepakatan gencatan senjata dengan Belanda",
+                                    "Ikrar bertumpah darah satu, berbangsa satu, dan berbahasa satu Indonesia",
+                                    "Pembentukan pemerintahan sementara Indonesia",
+                                    "Proklamasi kemerdekaan Indonesia"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Sumpah Pemuda berisi ikrar persatuan pemuda Indonesia: satu tanah air, satu bangsa, dan satu bahasa persatuan."
+                            },
+                            {
+                                question: "Mengapa berdirinya Budi Utomo dianggap berbeda dari perlawanan-perlawanan sebelumnya terhadap penjajah?",
+                                options: [
+                                    "Karena menggunakan senjata modern dari luar negeri",
+                                    "Karena diorganisir secara modern, bukan lagi bersifat kedaerahan dan mengandalkan kekuatan senjata semata",
+                                    "Karena didukung penuh oleh pemerintah kolonial Belanda",
+                                    "Karena hanya berfokus pada perdagangan rempah-rempah"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Budi Utomo menandai pergeseran dari perlawanan fisik kedaerahan menuju perjuangan yang lebih terorganisir dan bersifat nasional."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const IPS_SUBJECTS_XII = [
+            {
+                id: "sosiologi",
+                name: "Sosiologi",
+                icon: "users",
+                headerColor: "bg-purple-600",
+                topics: [
+                    {
+                        id: "perubahan-sosial-globalisasi",
+                        title: "Perubahan Sosial dan Globalisasi",
+                        duration: "13 Menit",
+                        content: [
+                            "Perubahan Sosial adalah pergeseran atau perubahan pada struktur dan fungsi suatu sistem sosial masyarakat, mencakup perubahan nilai, norma, pola perilaku, hingga lembaga kemasyarakatan. Perubahan sosial dapat berlangsung lambat (evolusi) maupun cepat dan mendasar (revolusi).",
+                            "Faktor pendorong perubahan sosial antara lain kontak dengan budaya lain, kemajuan sistem pendidikan, sikap masyarakat yang terbuka terhadap hal baru, serta perkembangan teknologi informasi. Sebaliknya, faktor penghambat perubahan meliputi sikap tradisional yang kaku, kurangnya interaksi dengan masyarakat luar, dan rasa takut akan goyahnya integrasi kelompok.",
+                            "Globalisasi mempercepat arus perubahan sosial melalui keterhubungan antarnegara di bidang ekonomi, budaya, dan teknologi informasi. Dampak positifnya berupa kemudahan akses informasi dan peluang kerja lintas negara, sementara dampak negatifnya berupa Westernisasi (peniruan gaya hidup Barat secara berlebihan) yang dapat menggeser nilai-nilai budaya lokal."
+                        ],
+                        quiz: [
+                            {
+                                question: "Perubahan pada struktur dan fungsi suatu sistem sosial masyarakat, baik berlangsung lambat maupun cepat, disebut...",
+                                options: [
+                                    "Stratifikasi sosial",
+                                    "Perubahan Sosial",
+                                    "Mobilitas sosial vertikal",
+                                    "Lembaga sosial permanen"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Perubahan sosial mencakup pergeseran nilai, norma, dan struktur masyarakat baik secara evolusi (lambat) maupun revolusi (cepat)."
+                            },
+                            {
+                                question: "Manakah yang termasuk faktor pendorong terjadinya perubahan sosial?",
+                                options: [
+                                    "Sikap tradisional yang kaku terhadap hal baru",
+                                    "Kontak dengan budaya lain dan kemajuan sistem pendidikan",
+                                    "Kurangnya interaksi dengan masyarakat luar",
+                                    "Rasa takut kehilangan identitas kelompok"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Kontak budaya dan kemajuan pendidikan membuka wawasan masyarakat sehingga mendorong terjadinya perubahan sosial."
+                            },
+                            {
+                                question: "Peniruan gaya hidup kebarat-baratan secara berlebihan tanpa penyaringan sebagai dampak negatif globalisasi disebut...",
+                                options: [
+                                    "Modernisasi",
+                                    "Westernisasi",
+                                    "Akulturasi budaya",
+                                    "Asimilasi nasional"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Westernisasi adalah peniruan gaya hidup Barat secara berlebihan tanpa mempertimbangkan kesesuaian dengan nilai budaya lokal."
+                            }
+                        ]
+                    },
+                    {
+                        id: "pemberdayaan-komunitas-kearifan-lokal",
+                        title: "Pemberdayaan Komunitas dan Kearifan Lokal",
+                        duration: "12 Menit",
+                        content: [
+                            "Pemberdayaan Masyarakat adalah proses membangun kemampuan masyarakat melalui upaya nyata guna meningkatkan taraf hidup, kesejahteraan, dan kemandirian dalam menghadapi berbagai persoalan sosial ekonomi di lingkungannya sendiri, bukan sekadar memberi bantuan yang bersifat sementara.",
+                            "Strategi pemberdayaan yang efektif bersifat partisipatif, artinya masyarakat dilibatkan secara aktif sejak tahap perencanaan, pelaksanaan, hingga evaluasi program, bukan hanya dijadikan objek penerima bantuan pasif. Contohnya program pelatihan kewirausahaan berbasis potensi lokal bagi warga di sekitar sekolah vokasi.",
+                            "Kearifan Lokal (local wisdom) adalah nilai-nilai luhur yang tumbuh dan berkembang dalam suatu masyarakat sebagai hasil interaksi panjang dengan lingkungannya, seperti sistem gotong royong, subak, atau musyawarah adat. Kearifan lokal dapat menjadi Modal Sosial yang efektif untuk mendukung program pembangunan berkelanjutan di suatu daerah."
+                        ],
+                        quiz: [
+                            {
+                                question: "Inti dari konsep Pemberdayaan Masyarakat adalah...",
+                                options: [
+                                    "Memberikan bantuan dana secara terus-menerus tanpa henti",
+                                    "Membangun kemampuan dan kemandirian masyarakat dalam mengatasi persoalannya sendiri",
+                                    "Mengambil alih seluruh urusan masyarakat oleh pemerintah pusat",
+                                    "Membatasi partisipasi masyarakat dalam program pembangunan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pemberdayaan berfokus pada peningkatan kemandirian dan kapasitas masyarakat, bukan sekadar pemberian bantuan sesaat."
+                            },
+                            {
+                                question: "Mengapa pendekatan partisipatif penting dalam program pemberdayaan masyarakat?",
+                                options: [
+                                    "Agar program berjalan lebih cepat tanpa melibatkan warga",
+                                    "Karena masyarakat dilibatkan aktif sejak perencanaan hingga evaluasi sehingga program lebih tepat sasaran dan berkelanjutan",
+                                    "Karena hanya pemerintah yang berhak menentukan kebutuhan masyarakat",
+                                    "Agar biaya program dapat ditanggung sepenuhnya oleh warga"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pendekatan partisipatif membuat program lebih sesuai kebutuhan riil masyarakat dan meningkatkan rasa memiliki terhadap program tersebut."
+                            },
+                            {
+                                question: "Nilai-nilai luhur seperti gotong royong dan musyawarah adat yang tumbuh dari interaksi panjang masyarakat dengan lingkungannya disebut...",
+                                options: [
+                                    "Modernisasi sosial",
+                                    "Kearifan Lokal",
+                                    "Difusi kebudayaan asing",
+                                    "Stratifikasi sosial tertutup"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Kearifan lokal adalah nilai dan praktik luhur khas suatu masyarakat yang lahir dari pengalaman panjang berinteraksi dengan lingkungannya."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "geografi",
+                name: "Geografi",
+                icon: "globe",
+                headerColor: "bg-teal-600",
+                topics: [
+                    {
+                        id: "kerjasama-ekonomi-antarnegara",
+                        title: "Bentuk-Bentuk Kerja Sama Ekonomi Antarnegara",
+                        duration: "13 Menit",
+                        content: [
+                            "Kerja sama ekonomi antarnegara adalah hubungan yang dijalin dua negara atau lebih di bidang ekonomi untuk saling memenuhi kebutuhan, memperluas pasar, serta meningkatkan kesejahteraan masyarakatnya melalui pertukaran barang, jasa, teknologi, maupun investasi.",
+                            "Berdasarkan jumlah anggotanya, kerja sama ekonomi dibedakan menjadi Kerja Sama Bilateral (antara dua negara, misalnya Indonesia-Jepang), Kerja Sama Regional (antarnegara dalam satu kawasan, seperti ASEAN di Asia Tenggara), dan Kerja Sama Multilateral (melibatkan banyak negara lintas kawasan, seperti WTO dan G20).",
+                            "Bagi Indonesia, keanggotaan dalam ASEAN membuka peluang pasar bebas kawasan yang lebih luas bagi produk UMKM dan tenaga kerja terampil, namun juga menghadirkan tantangan berupa persaingan produk impor yang lebih ketat sehingga menuntut peningkatan daya saing lulusan pendidikan vokasi."
+                        ],
+                        quiz: [
+                            {
+                                question: "Kerja sama ekonomi yang hanya melibatkan dua negara disebut kerja sama...",
+                                options: [
+                                    "Regional",
+                                    "Multilateral",
+                                    "Bilateral",
+                                    "Internasional penuh"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Kerja sama bilateral adalah kerja sama ekonomi yang dijalin antara dua negara saja."
+                            },
+                            {
+                                question: "ASEAN merupakan contoh bentuk kerja sama ekonomi...",
+                                options: [
+                                    "Bilateral",
+                                    "Regional",
+                                    "Multilateral lintas benua",
+                                    "Perjanjian dagang perorangan"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "ASEAN adalah organisasi kerja sama regional yang menghimpun negara-negara di kawasan Asia Tenggara."
+                            },
+                            {
+                                question: "Apa tantangan utama bagi Indonesia dengan adanya pasar bebas kawasan ASEAN?",
+                                options: [
+                                    "Hilangnya seluruh lapangan pekerjaan di dalam negeri",
+                                    "Persaingan produk dan tenaga kerja yang lebih ketat sehingga menuntut peningkatan daya saing",
+                                    "Penutupan seluruh akses perdagangan luar negeri",
+                                    "Larangan ekspor produk UMKM ke luar negeri"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pasar bebas kawasan membuka peluang sekaligus tantangan persaingan yang menuntut peningkatan kualitas dan daya saing produk maupun tenaga kerja."
+                            }
+                        ]
+                    },
+                    {
+                        id: "interaksi-desa-kota",
+                        title: "Interaksi Keruangan Desa dan Kota",
+                        duration: "12 Menit",
+                        content: [
+                            "Desa dan Kota memiliki potensi berbeda yang saling melengkapi: desa umumnya kaya akan sumber daya alam dan hasil pertanian, sedangkan kota unggul dalam fasilitas pendidikan, kesehatan, dan lapangan pekerjaan sektor industri maupun jasa. Perbedaan potensi inilah yang mendorong terjadinya interaksi antarwilayah.",
+                            "Teori Titik Henti (Breaking Point Theory) menjelaskan batas wilayah pengaruh antara dua pusat kegiatan (misalnya kota besar dan kota kecil) berdasarkan jarak dan jumlah penduduknya, digunakan untuk memperkirakan lokasi ideal pembangunan fasilitas umum di antara dua wilayah tersebut.",
+                            "Interaksi desa-kota yang tidak terkendali dapat menimbulkan dampak negatif berupa Alih Fungsi Lahan, yaitu perubahan penggunaan lahan pertanian produktif di pinggiran kota menjadi kawasan permukiman atau industri, yang berpotensi mengancam ketahanan pangan wilayah tersebut."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apa yang mendorong terjadinya interaksi keruangan antara wilayah desa dan kota?",
+                                options: [
+                                    "Kesamaan potensi sumber daya di kedua wilayah",
+                                    "Perbedaan potensi yang saling melengkapi kebutuhan masing-masing wilayah",
+                                    "Larangan pemerintah untuk berpindah wilayah",
+                                    "Ketiadaan sarana transportasi antarwilayah"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Interaksi desa-kota terjadi karena adanya perbedaan potensi sumber daya yang saling melengkapi kebutuhan kedua wilayah."
+                            },
+                            {
+                                question: "Teori yang digunakan untuk memperkirakan batas wilayah pengaruh antara dua pusat kegiatan berdasarkan jarak dan jumlah penduduk disebut...",
+                                options: [
+                                    "Teori Lokasi Industri",
+                                    "Teori Titik Henti (Breaking Point Theory)",
+                                    "Teori Konsentris Kota",
+                                    "Teori Difusi Inovasi"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Teori Titik Henti membantu menentukan batas wilayah pengaruh dua pusat kegiatan berdasarkan jarak dan jumlah penduduknya."
+                            },
+                            {
+                                question: "Perubahan lahan pertanian produktif menjadi kawasan permukiman atau industri di pinggiran kota disebut...",
+                                options: [
+                                    "Konservasi lahan",
+                                    "Reboisasi wilayah",
+                                    "Alih Fungsi Lahan",
+                                    "Zonasi tata ruang"
+                                ],
+                                correctAnswer: 2,
+                                explanation: "Alih fungsi lahan adalah perubahan peruntukan lahan pertanian menjadi permukiman atau industri, yang dapat mengancam ketahanan pangan."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ekonomi",
+                name: "Ekonomi",
+                icon: "trending-up",
+                headerColor: "bg-emerald-600",
+                topics: [
+                    {
+                        id: "perdagangan-internasional-kurs",
+                        title: "Perdagangan Internasional dan Kurs Valuta Asing",
+                        duration: "13 Menit",
+                        content: [
+                            "Perdagangan Internasional adalah kegiatan jual beli barang atau jasa yang dilakukan antarnegara, meliputi kegiatan Ekspor (menjual barang ke luar negeri) dan Impor (membeli barang dari luar negeri). Perdagangan ini timbul karena adanya perbedaan sumber daya, teknologi, dan keunggulan komparatif antarnegara.",
+                            "Kurs Valuta Asing adalah nilai tukar mata uang suatu negara terhadap mata uang negara lain, misalnya nilai tukar Rupiah terhadap Dolar Amerika Serikat. Kurs ditentukan oleh permintaan dan penawaran di pasar valuta asing, dan fluktuasinya berdampak langsung pada harga barang impor maupun daya saing produk ekspor.",
+                            "Selisih antara nilai total ekspor dan impor suatu negara disebut Neraca Perdagangan. Ketika ekspor lebih besar dari impor, terjadi surplus neraca perdagangan yang menguntungkan perekonomian. Sebaliknya, kebijakan Proteksionisme (pembatasan impor melalui tarif atau kuota) sering diterapkan pemerintah untuk melindungi industri dalam negeri dari persaingan produk asing."
+                        ],
+                        quiz: [
+                            {
+                                question: "Kegiatan menjual barang atau jasa produksi dalam negeri ke pasar luar negeri disebut...",
+                                options: [
+                                    "Impor",
+                                    "Ekspor",
+                                    "Devaluasi",
+                                    "Proteksi tarif"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Ekspor adalah kegiatan menjual barang/jasa produksi dalam negeri ke pasar luar negeri."
+                            },
+                            {
+                                question: "Nilai tukar mata uang suatu negara terhadap mata uang negara lain disebut...",
+                                options: [
+                                    "Kurs Valuta Asing",
+                                    "Indeks Harga Konsumen",
+                                    "Neraca Pembayaran",
+                                    "Suku bunga acuan"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Kurs valuta asing menunjukkan perbandingan nilai mata uang suatu negara dengan mata uang negara lainnya."
+                            },
+                            {
+                                question: "Kebijakan pembatasan impor melalui tarif atau kuota untuk melindungi industri dalam negeri disebut...",
+                                options: [
+                                    "Perdagangan bebas",
+                                    "Proteksionisme",
+                                    "Devaluasi mata uang",
+                                    "Liberalisasi pasar"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Proteksionisme adalah kebijakan melindungi industri domestik dari persaingan produk impor melalui tarif atau kuota."
+                            }
+                        ]
+                    },
+                    {
+                        id: "koperasi-kewirausahaan-digital",
+                        title: "Koperasi dan Kewirausahaan di Era Digital",
+                        duration: "12 Menit",
+                        content: [
+                            "Koperasi adalah badan usaha yang beranggotakan orang-orang dengan berlandaskan asas kekeluargaan dan bertujuan mensejahterakan anggotanya. Di era digital, koperasi modern mulai mengembangkan platform digital untuk mempermudah simpan pinjam dan pemasaran produk anggota secara daring.",
+                            "Kewirausahaan adalah kemampuan menciptakan sesuatu yang baru dan bernilai melalui pengelolaan sumber daya secara kreatif, inovatif, dan berani mengambil risiko. Usaha Mikro, Kecil, dan Menengah (UMKM) menjadi tulang punggung perekonomian nasional karena menyerap tenaga kerja dalam jumlah besar.",
+                            "Perkembangan Ekonomi Digital membuka peluang besar bagi lulusan SMK untuk merintis usaha melalui platform e-commerce, media sosial, maupun jasa daring lainnya dengan modal yang relatif terjangkau, sekaligus menuntut kemampuan literasi digital dan pengelolaan usaha yang profesional."
+                        ],
+                        quiz: [
+                            {
+                                question: "Badan usaha yang beranggotakan orang-orang dengan berlandaskan asas kekeluargaan disebut...",
+                                options: [
+                                    "Perseroan Terbatas",
+                                    "Koperasi",
+                                    "Firma dagang",
+                                    "Badan Usaha Milik Asing"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Koperasi adalah badan usaha berasaskan kekeluargaan yang bertujuan mensejahterakan anggotanya."
+                            },
+                            {
+                                question: "Mengapa UMKM disebut sebagai tulang punggung perekonomian nasional Indonesia?",
+                                options: [
+                                    "Karena hanya dimiliki oleh perusahaan besar multinasional",
+                                    "Karena menyerap tenaga kerja dalam jumlah besar dan tersebar luas di masyarakat",
+                                    "Karena tidak membutuhkan modal usaha sama sekali",
+                                    "Karena dikelola sepenuhnya oleh pemerintah pusat"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "UMKM menyerap tenaga kerja dalam skala besar dan tersebar di berbagai daerah, menjadikannya penopang penting perekonomian nasional."
+                            },
+                            {
+                                question: "Kemampuan apa yang paling dibutuhkan lulusan SMK untuk merintis usaha melalui platform e-commerce di era ekonomi digital?",
+                                options: [
+                                    "Kemampuan bertani secara tradisional",
+                                    "Literasi digital dan pengelolaan usaha yang profesional",
+                                    "Kemampuan berlayar mengarungi lautan",
+                                    "Keahlian menambang mineral logam"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Merintis usaha digital menuntut literasi digital yang baik serta kemampuan mengelola usaha secara profesional agar kompetitif."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "sejarah",
+                name: "Sejarah Indonesia",
+                icon: "history",
+                headerColor: "bg-orange-600",
+                topics: [
+                    {
+                        id: "proklamasi-mempertahankan-kedaulatan",
+                        title: "Proklamasi Kemerdekaan dan Perjuangan Mempertahankan Kedaulatan",
+                        duration: "13 Menit",
+                        content: [
+                            "Proklamasi Kemerdekaan Indonesia dikumandangkan oleh Soekarno dan Mohammad Hatta pada 17 Agustus 1945 di Jalan Pegangsaan Timur 56, Jakarta, sebagai puncak perjuangan panjang bangsa Indonesia melawan penjajahan dan menjadi titik awal berdirinya Negara Kesatuan Republik Indonesia yang berdaulat.",
+                            "Kemerdekaan yang baru diproklamasikan tidak serta merta diakui oleh Belanda, yang kemudian melancarkan Agresi Militer Belanda I (1947) dan Agresi Militer Belanda II (1948) untuk merebut kembali wilayah Indonesia. Bangsa Indonesia mempertahankan kedaulatannya melalui perjuangan diplomasi internasional sekaligus perlawanan fisik gigih rakyat di berbagai daerah.",
+                            "Pengakuan kedaulatan Indonesia secara penuh oleh Belanda akhirnya dicapai melalui Konferensi Meja Bundar (KMB) di Den Haag pada akhir tahun 1949, yang menjadi babak akhir perjuangan diplomasi panjang bangsa Indonesia dalam mempertahankan kemerdekaannya di mata dunia internasional."
+                        ],
+                        quiz: [
+                            {
+                                question: "Proklamasi Kemerdekaan Indonesia dibacakan oleh Soekarno-Hatta pada tanggal...",
+                                options: [
+                                    "17 Agustus 1945",
+                                    "28 Oktober 1928",
+                                    "10 November 1945",
+                                    "1 Juni 1945"
+                                ],
+                                correctAnswer: 0,
+                                explanation: "Proklamasi Kemerdekaan Indonesia dibacakan pada 17 Agustus 1945 di Jalan Pegangsaan Timur 56, Jakarta."
+                            },
+                            {
+                                question: "Upaya Belanda merebut kembali wilayah Indonesia setelah proklamasi kemerdekaan dikenal dengan istilah...",
+                                options: [
+                                    "Konferensi Meja Bundar",
+                                    "Agresi Militer Belanda",
+                                    "Perjanjian Linggarjati damai",
+                                    "Politik Etis kolonial"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Agresi Militer Belanda I dan II adalah upaya militer Belanda untuk merebut kembali wilayah kedaulatan Indonesia pasca-proklamasi."
+                            },
+                            {
+                                question: "Pengakuan kedaulatan penuh Indonesia oleh Belanda dicapai melalui forum...",
+                                options: [
+                                    "Perundingan Renville",
+                                    "Konferensi Meja Bundar (KMB) di Den Haag",
+                                    "Perjanjian Kalijati",
+                                    "Kongres Pemuda Indonesia"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Konferensi Meja Bundar (KMB) tahun 1949 di Den Haag menjadi forum diplomasi yang mengakhiri sengketa kedaulatan Indonesia-Belanda."
+                            }
+                        ]
+                    },
+                    {
+                        id: "indonesia-era-reformasi",
+                        title: "Indonesia di Era Reformasi",
+                        duration: "12 Menit",
+                        content: [
+                            "Era Reformasi diawali dengan runtuhnya pemerintahan Orde Baru pada Mei 1998, yang dipicu oleh krisis moneter berkepanjangan, tuntutan pemberantasan Korupsi Kolusi dan Nepotisme (KKN), serta gelombang demonstrasi mahasiswa besar-besaran di berbagai kota yang menuntut Presiden Soeharto mengundurkan diri.",
+                            "Tuntutan utama gerakan Reformasi 1998 mencakup penegakan supremasi hukum, pemberantasan KKN, pelaksanaan otonomi daerah yang lebih luas, penghapusan dwifungsi ABRI, serta kebebasan pers dan berpendapat yang selama Orde Baru sangat dibatasi oleh pemerintah pusat.",
+                            "Pasca-reformasi, Indonesia mengalami perkembangan demokrasi yang signifikan, ditandai dengan pelaksanaan Pemilihan Umum secara langsung, penerapan kebijakan Otonomi Daerah yang memberi kewenangan lebih besar kepada pemerintah kabupaten/kota, serta tumbuhnya kebebasan pers sebagai pilar keempat demokrasi Pancasila."
+                        ],
+                        quiz: [
+                            {
+                                question: "Apa faktor utama yang memicu runtuhnya pemerintahan Orde Baru pada Mei 1998?",
+                                options: [
+                                    "Kemenangan pemilihan umum oleh partai oposisi",
+                                    "Krisis moneter, tuntutan pemberantasan KKN, dan demonstrasi mahasiswa besar-besaran",
+                                    "Serangan militer dari negara tetangga",
+                                    "Bencana alam berskala nasional"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Runtuhnya Orde Baru dipicu oleh krisis moneter, tuntutan pemberantasan KKN, dan tekanan demonstrasi mahasiswa secara masif."
+                            },
+                            {
+                                question: "Kebijakan yang memberi kewenangan lebih besar kepada pemerintah kabupaten/kota dalam mengelola daerahnya sendiri disebut...",
+                                options: [
+                                    "Sentralisasi pemerintahan",
+                                    "Otonomi Daerah",
+                                    "Dwifungsi ABRI",
+                                    "Demokrasi terpimpin"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Otonomi daerah memberi kewenangan lebih luas kepada pemerintah daerah untuk mengatur dan mengelola urusan wilayahnya sendiri."
+                            },
+                            {
+                                question: "Manakah yang termasuk tuntutan utama gerakan Reformasi 1998?",
+                                options: [
+                                    "Pembatasan kebebasan pers secara ketat",
+                                    "Pemberantasan Korupsi, Kolusi, dan Nepotisme (KKN)",
+                                    "Penguatan dwifungsi ABRI dalam pemerintahan",
+                                    "Penghapusan pemilihan umum langsung"
+                                ],
+                                correctAnswer: 1,
+                                explanation: "Pemberantasan KKN adalah salah satu tuntutan inti gerakan Reformasi 1998 bersama supremasi hukum dan kebebasan pers."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const IPS_DATA = {
+            'X': IPS_SUBJECTS,
+            'XI': IPS_SUBJECTS_XI,
+            'XII': IPS_SUBJECTS_XII
+        };
+
+        const GRADE_LABELS = { 'X': 'Kelas X (Sepuluh)', 'XI': 'Kelas XI (Sebelas)', 'XII': 'Kelas XII (Duabelas)' };
+
+        const TOTAL_TOPICS_ALL_GRADES = Object.values(IPS_DATA).reduce(
+            (total, subjects) => total + subjects.reduce((s, sub) => s + sub.topics.length, 0), 0
+        );
+
+
+        // 2. COMPONENT: CORE STUDY MAP & INFOGRAPHICS (100% OFFLINE VISUALIZER)
+        function TopicVisualizer({ topicId }) {
+            const renderVisual = () => {
+                switch (topicId) {
+                    case 'interaksi-sosial':
+                        return (
+                            <div className="space-y-4 text-xs">
+                                <h5 className="font-extrabold text-purple-900 mb-2">Peta Alur Syarat & Bentuk Hubungan Sosial</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 space-y-1.5">
+                                        <span className="font-bold text-purple-900 block">🤝 Proses Asosiatif (Kerja Sama)</span>
+                                        <div className="space-y-1">
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Kerja Sama:</strong> Usaha bersama mencapai tujuan.</div>
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Akomodasi:</strong> Solusi meredakan konflik.</div>
+                                            <div className="bg-white p-1.5 rounded border border-purple-100"><strong>Asimilasi:</strong> Peleburan 2 budaya baru.</div>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 bg-red-50 rounded-xl border border-red-100 space-y-1.5">
+                                        <span className="font-bold text-red-900 block">⚡ Proses Disosiatif (Perpecahan)</span>
+                                        <div className="space-y-1">
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Persaingan:</strong> Perebutan prestasi secara sportif.</div>
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Kontravensi:</strong> Penolakan/ragu terselubung.</div>
+                                            <div className="bg-white p-1.5 rounded border border-red-100"><strong>Pertikaian:</strong> Konflik fisik/pemaksaan.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-100 p-2 rounded-lg text-center font-bold text-[10px] text-slate-600 flex justify-around items-center">
+                                    <span>Kontak Sosial</span> ➡️ <span>Komunikasi</span> ➡️ <span>Interaksi Sosial Terbentuk</span>
+                                </div>
+                            </div>
+                        );
+                    case 'nilai-norma-sosial':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-indigo-900">Hierarki Kekuatan Mengikat Norma Sosial (Terlemah ke Terkuat)</h5>
+                                <div className="flex flex-col space-y-1.5">
+                                    <div className="bg-indigo-700 text-white p-2.5 rounded-lg font-bold flex justify-between items-center">
+                                        <span>1. Adat Istiadat (Customs)</span>
+                                        <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded">Sanksi Adat & Sosial Berat</span>
+                                    </div>
+                                    <div className="bg-indigo-600 text-white p-2.5 rounded-lg font-bold flex justify-between items-center">
+                                        <span>2. Tata Kelakuan (Mores)</span>
+                                        <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded">Teguran Moral Resmi</span>
+                                    </div>
+                                    <div className="bg-indigo-50 text-indigo-900 p-2.5 rounded-lg font-bold border border-indigo-200 flex justify-between items-center">
+                                        <span>3. Kebiasaan (Folkways)</span>
+                                        <span className="text-[10px] bg-indigo-100 px-2 py-0.5 rounded">Sindiran / Teguran</span>
+                                    </div>
+                                    <div className="bg-indigo-50/50 text-indigo-800 p-2.5 rounded-lg border border-indigo-100 flex justify-between items-center">
+                                        <span>4. Cara (Usage)</span>
+                                        <span className="text-[10px] bg-indigo-100/50 px-2 py-0.5 rounded">Cemoohan Ringan</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    case 'peta-penginderaan-jauh':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-teal-900">Alur Pengumpulan Data Penginderaan Jauh (Remote Sensing)</h5>
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px]">
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">☀️<br/><strong>Sumber Tenaga</strong><br/>Matahari</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">☁️<br/><strong>Atmosfer</strong><br/>Hambatan Udara</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">🏔️<br/><strong>Objek Bumi</strong><br/>Hutan/Sungai/Kota</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">🛰️<br/><strong>Sensor Satelit</strong><br/>Perekam Energi</div>
+                                    <div className="bg-white border border-teal-100 p-2 rounded-xl">📱<br/><strong>Citra Satelit</strong><br/>Peta Visual</div>
+                                </div>
+                            </div>
+                        );
+                    case 'langkah-penelitian-geografi':
+                        return (
+                            <div className="space-y-2 text-xs">
+                                <h5 className="font-extrabold text-teal-900">Langkah Riset Geografi Spasial</h5>
+                                <div className="space-y-1 bg-white p-3 rounded-xl border border-teal-100">
+                                    <div><strong>1. Isu Geosfer:</strong> Meneliti fenomena alam nyata (misal: Longsor Puncak Bogor).</div>
+                                    <div><strong>2. Hipotesis:</strong> Menyusun dugaan penyebab keruangan fenomena geografi.</div>
+                                    <div><strong>3. Data Sekunder & Primer:</strong> Memadukan citra satelit dengan tinjauan langsung ke lapangan <em>(Ground Truth)</em>.</div>
+                                    <div><strong>4. Solusi Wilayah:</strong> Rekomendasi pelestarian kelestarian ekologi.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'konsep-dasar-ekonomi':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-emerald-900">Skema Inti Masalah Ekonomi (Kelangkaan)</h5>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center">
+                                        <span className="text-lg">📈</span><br/>
+                                        <strong>Kebutuhan Manusia</strong><br/>
+                                        <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded-full">Tidak Terbatas</span>
+                                    </div>
+                                    <div className="bg-red-50 border border-red-100 p-3 rounded-xl text-center">
+                                        <span className="text-lg">📉</span><br/>
+                                        <strong>Sumber Daya Alam</strong><br/>
+                                        <span className="text-[10px] text-red-800 font-bold bg-red-100 px-1.5 py-0.2 rounded-full">Sangat Terbatas</span>
+                                    </div>
+                                </div>
+                                <div className="p-2.5 bg-amber-50 rounded-lg text-amber-900 border border-amber-100">
+                                    <strong>Akibat:</strong> Terjadi Kelangkaan ➡️ Manusia wajib menyusun <strong>Skala Prioritas</strong> ➡️ Pilihan memicu adanya <strong>Biaya Peluang (Opportunity Cost)</strong>.
+                                </div>
+                            </div>
+                        );
+                    case 'sistem-ekonomi-indonesia':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-emerald-900">Tiga Pilar Demokrasi Ekonomi Pancasila (UUD 1945 Pasal 33)</h5>
+                                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                                    <div className="p-2 bg-white border border-emerald-100 rounded-lg"><strong>🏛️ BUMN/BUMD:</strong> Menguasai cabang produksi vital publik.</div>
+                                    <div className="p-2 bg-white border border-orange-100 rounded-lg"><strong>👥 Koperasi:</strong> Soko guru ekonomi asas kekeluargaan.</div>
+                                    <div className="p-2 bg-white border border-blue-100 rounded-lg"><strong>🏢 Swasta (BUMS):</strong> Penggerak pasar & inovasi lapangan kerja.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'manusia-purba':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-orange-900">Evolusi Budaya & Pola Tinggal Leluhur Praaksara</h5>
+                                <div className="border-l-2 border-orange-200 pl-3 space-y-2">
+                                    <div><strong>1. Masa Berburu (Paleolitikum):</strong> Pola hidup berpindah-pindah <em>(Nomaden)</em>, mengandalkan bahan alam langsung <em>(Food Gathering)</em>.</div>
+                                    <div><strong>2. Masa Bercocok Tanam (Neolitikum):</strong> Pola hidup menetap berkelompok <em>(Sedenter)</em>, mulai memproduksi bahan makanan mandiri <em>(Food Producing)</em>.</div>
+                                </div>
+                            </div>
+                        );
+                    case 'kerajaan-hindu-buddha':
+                        return (
+                            <div className="space-y-3 text-xs">
+                                <h5 className="font-extrabold text-orange-900">Tiga Prasasti Kuno Tarumanegara yang Ditemukan di Bogor</h5>
+                                <div className="space-y-1.5">
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">👣 <strong>Prasasti Ciaruteun:</strong> Cetakan kaki Raja Purnawarman bagai telapak kaki Dewa Wisnu pelindung bumi.</div>
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">🐘 <strong>Prasasti Kebon Kopi:</strong> Ukiran tapak kaki gajah Airawata sakral tunggangan perang Dewa Indra.</div>
+                                    <div className="bg-white p-2 rounded-lg border border-orange-100">🏹 <strong>Prasasti Jambu:</strong> Memuji keberanian sang raja menaklukkan musuh dalam perang.</div>
+                                </div>
+                            </div>
+                        );
+                    default:
+                        const autoTerms = TOPIC_FLASHCARDS[topicId] || [];
+                        if (autoTerms.length === 0) {
+                            return <p className="text-slate-400 text-center">Visualizer peta konsep tidak tersedia.</p>;
+                        }
+                        return (
+                            <div className="space-y-2">
+                                <h5 className="font-extrabold text-blue-900">Peta Konsep Istilah Kunci Materi Ini</h5>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {autoTerms.map((term, idx) => (
+                                        <div key={idx} className="bg-white p-3 rounded-lg border border-blue-100 space-y-1">
+                                            <div className="text-blue-600 font-black text-xs uppercase">{term.front}</div>
+                                            <div className="text-slate-600 text-[11px] leading-snug">{term.back}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                }
+            };
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-blue-50 text-blue-600 p-2 rounded-lg"><i data-lucide="layers"></i></div>
+                        <div>
+                            <h4 className="font-bold text-slate-800 text-sm md:text-base">Infografis & Peta Konsep IPS</h4>
+                            <p className="text-xs text-slate-500">Skema konsep teori untuk memperkuat daya ingat belajar Anda</p>
+                        </div>
+                    </div>
+                    <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-xl">{renderVisual()}</div>
+                </div>
+            );
+        }
+
+        // 3. COMPONENT: INTERACTIVE FLASHCARDS STUDY DECK
+        const TOPIC_FLASHCARDS = {
+            'interaksi-sosial': [
+                { front: 'Asosiatif', back: 'Proses hubungan sosial yang mengarah kepada persatuan, integrasi, dan solidaritas sosial.' },
+                { front: 'Disosiatif', back: 'Proses hubungan sosial yang mengarah kepada perpecahan, kompetisi, pertikaian, atau konflik.' },
+                { front: 'Zoon Politikon', back: 'Istilah sosiologi dari Aristoteles yang menyatakan bahwa manusia pada kodratnya adalah makhluk sosial.' }
+            ],
+            'nilai-norma-sosial': [
+                { front: 'Kebiasaan (Folkways)', back: 'Perilaku berulang-ulang yang diterima masyarakat umum karena bernilai baik (contoh: menyapa guru).' },
+                { front: 'Adat Istiadat (Customs)', back: 'Aturan adat turun-temurun yang mengikat kuat secara sakral dengan sanksi adat tegas.' },
+                { front: 'Usage (Cara)', back: 'Bentuk norma sosial dengan daya ikat paling lemah, melanggarnya hanya mendapat teguran ringan.' }
+            ],
+            'peta-penginderaan-jauh': [
+                { front: 'Skala Peta', back: 'Rasio matematika perbandingan antara jarak di lembar peta dengan jarak sesungguhnya di permukaan bumi.' },
+                { front: 'Citra Satelit', back: 'Hasil perekaman visual digital dari permukaan bumi menggunakan sensor elektromagnetik satelit.' },
+                { front: 'Legenda Peta', back: 'Bagian peta yang berisi penjelasan atau daftar arti dari simbol-simbol visual yang digunakan.' }
+            ],
+            'langkah-penelitian-geografi': [
+                { front: 'Pendekatan Spasial', back: 'Pendekatan khas geografi yang mengkaji penyebaran lokasi dan struktur ruang fenomena geosfer.' },
+                { front: 'Pendekatan Ekologis', back: 'Pendekatan geografi yang mengkaji interaksi timbal balik makhluk hidup dengan ekosistem fisiknya.' },
+                { front: 'Ground Truth (Verifikasi)', back: 'Pengamatan langsung ke lokasi penelitian untuk memvalidasi keakuratan data sekunder citra satelit.' }
+            ],
+            'konsep-dasar-ekonomi': [
+                { front: 'Oikonomia', back: 'Istilah Yunani asal mula kata ekonomi. Oikos berarti rumah tangga, dan Nomos berarti aturan/hukum.' },
+                { front: 'Kelangkaan (Scarcity)', back: 'Kondisi ketidakseimbangan keinginan manusia tak terbatas, sedangkan alat pemuas sangat terbatas.' },
+                { front: 'Biaya Peluang', back: 'Nilai dari pilihan terbaik lain yang terpaksa dikorbankan untuk memilih keputusan ekonomi saat ini.' }
+            ],
+            'sistem-ekonomi-indonesia': [
+                { front: 'Pasal 33 UUD 1945', back: 'Dasar hukum perekonomian Indonesia yang menyatakan bahwa ekonomi disusun atas asas kekeluargaan.' },
+                { front: 'Soko Guru Ekonomi', back: 'Sebutan luhur bagi Koperasi di Indonesia karena konsep usahanya mencerminkan asas kekeluargaan nasional.' },
+                { front: 'BUMN', back: 'Badan Usaha Milik Negara yang bertugas mengelola sektor-sektor produksi vital untuk kemakmuran seluruh rakyat.' }
+            ],
+            'manusia-purba': [
+                { front: 'Nomaden', back: 'Pola hidup berpindah-pindah tempat tinggal menyesuaikan ketersediaan pangan di alam liar.' },
+                { front: 'Sedenter', back: 'Pola hidup menetap di suatu daerah perkampungan awal, bercocok tanam, dan memelihara hewan ternak.' },
+                { front: 'Pithecanthropus erectus', back: 'Manusia purba penemuan Eugene Dubois di Trinil Jawa Tengah yang artinya "Manusia Kera Berdiri Tegak".' }
+            ],
+            'kerajaan-hindu-buddha': [
+                { front: 'Dewa Wisnu', back: 'Dewa pelindung alam semesta. Telapak kaki Raja Purnawarman disimbolkan bagai tapak kaki Wisnu.' },
+                { front: 'Prasasti Ciaruteun', back: 'Prasasti Tarumanegara legendaris di Bogor yang memuat ukiran tapak kaki Raja Purnawarman.' },
+                { front: 'Sumpah Palapa', back: 'Sumpah kesatuan Nusantara legendaris yang diikrarkan oleh Patih Gajah Mada dari Majapahit.' }
+            ],
+            // --- Kelas XI ---
+            'masalah-sosial-masyarakat': [
+                { front: 'Kemiskinan Absolut', back: 'Kondisi pendapatan seseorang berada di bawah garis kebutuhan minimum untuk hidup layak.' },
+                { front: 'Kemiskinan Relatif', back: 'Kondisi seseorang berada di atas garis kemiskinan, namun masih tergolong miskin dibanding standar sekitarnya.' },
+                { front: 'Preventif', back: 'Upaya pencegahan masalah sosial sebelum muncul, contohnya penyuluhan dan pelatihan keterampilan kerja.' }
+            ],
+            'konflik-integrasi-sosial': [
+                { front: 'Konflik Konstruktif', back: 'Konflik yang menghasilkan kesepakatan baru dan memperkuat solidaritas kelompok.' },
+                { front: 'Konflik Destruktif', back: 'Konflik yang merusak keutuhan kelompok dan memicu kekerasan atau perpecahan sosial.' },
+                { front: 'Integrasi Sosial', back: 'Proses penyatuan unsur-unsur masyarakat yang berbeda menjadi satu kesatuan yang utuh dan serasi.' }
+            ],
+            'dinamika-kependudukan': [
+                { front: 'Natalitas', back: 'Angka kelahiran penduduk, salah satu faktor utama yang memengaruhi dinamika jumlah penduduk.' },
+                { front: 'Urbanisasi', back: 'Perpindahan penduduk dari desa menuju kota untuk mencari pekerjaan dan kehidupan lebih baik.' },
+                { front: 'Transmigrasi', back: 'Program pemindahan penduduk dari wilayah padat ke wilayah yang lebih jarang penduduknya.' }
+            ],
+            'sda-pembangunan-berkelanjutan': [
+                { front: 'SDA Terbarukan', back: 'Sumber daya alam yang dapat pulih kembali, seperti hutan, air, dan hasil pertanian.' },
+                { front: 'Degradasi Lingkungan', back: 'Penurunan kualitas dan daya dukung lingkungan akibat eksploitasi sumber daya secara berlebihan.' },
+                { front: 'Pembangunan Berkelanjutan', back: 'Prinsip pembangunan yang memenuhi kebutuhan masa kini tanpa mengorbankan kebutuhan generasi mendatang.' }
+            ],
+            'ketenagakerjaan-pembangunan-ekonomi': [
+                { front: 'Angkatan Kerja', back: 'Penduduk usia produktif (15-64 tahun) yang sedang bekerja atau aktif mencari pekerjaan.' },
+                { front: 'Pengangguran Terbuka', back: 'Kondisi seseorang yang benar-benar tidak bekerja meski sedang aktif mencari pekerjaan.' },
+                { front: 'IPM', back: 'Indeks Pembangunan Manusia, mengukur pembangunan dari dimensi kesehatan, pendidikan, dan standar hidup.' }
+            ],
+            'apbn-apbd-kebijakan-fiskal': [
+                { front: 'APBN', back: 'Anggaran Pendapatan dan Belanja Negara, rencana keuangan tahunan pemerintah pusat.' },
+                { front: 'Kebijakan Fiskal Ekspansif', back: 'Kebijakan menambah belanja negara atau menurunkan pajak untuk mendorong pertumbuhan ekonomi.' },
+                { front: 'Kebijakan Fiskal Kontraktif', back: 'Kebijakan mengurangi belanja negara atau menaikkan pajak untuk meredam inflasi.' }
+            ],
+            'kolonialisme-imperialisme': [
+                { front: 'VOC', back: 'Kongsi dagang Belanda yang memonopoli perdagangan rempah-rempah di Nusantara.' },
+                { front: 'Tanam Paksa (Cultuurstelsel)', back: 'Kebijakan yang mewajibkan rakyat menanam tanaman ekspor demi keuntungan pemerintah kolonial.' },
+                { front: 'Hak Oktroi', back: 'Hak istimewa VOC seperti memonopoli dagang, mencetak uang, dan membentuk tentara sendiri.' }
+            ],
+            'pergerakan-nasional': [
+                { front: 'Budi Utomo', back: 'Organisasi pelopor Kebangkitan Nasional yang berdiri pada 20 Mei 1908.' },
+                { front: 'Sumpah Pemuda', back: 'Ikrar persatuan pemuda Indonesia pada 28 Oktober 1928: satu tanah air, bangsa, dan bahasa.' },
+                { front: 'Politik Etis', back: 'Kebijakan balas budi kolonial Belanda di bidang irigasi, edukasi, dan emigrasi (transmigrasi).' }
+            ],
+            // --- Kelas XII ---
+            'perubahan-sosial-globalisasi': [
+                { front: 'Perubahan Sosial', back: 'Pergeseran struktur dan fungsi sistem sosial masyarakat, dapat berlangsung lambat atau cepat.' },
+                { front: 'Globalisasi', back: 'Keterhubungan antarnegara di bidang ekonomi, budaya, dan teknologi informasi secara mendunia.' },
+                { front: 'Westernisasi', back: 'Peniruan gaya hidup Barat secara berlebihan tanpa penyaringan nilai budaya lokal.' }
+            ],
+            'pemberdayaan-komunitas-kearifan-lokal': [
+                { front: 'Pemberdayaan Masyarakat', back: 'Proses membangun kemampuan dan kemandirian masyarakat mengatasi persoalannya sendiri.' },
+                { front: 'Kearifan Lokal', back: 'Nilai luhur yang tumbuh dari interaksi panjang masyarakat dengan lingkungannya, seperti gotong royong.' },
+                { front: 'Modal Sosial', back: 'Jaringan nilai kepercayaan dan kerja sama dalam masyarakat yang mendukung pembangunan bersama.' }
+            ],
+            'kerjasama-ekonomi-antarnegara': [
+                { front: 'ASEAN', back: 'Organisasi kerja sama ekonomi regional negara-negara di kawasan Asia Tenggara.' },
+                { front: 'Kerja Sama Bilateral', back: 'Bentuk kerja sama ekonomi yang hanya melibatkan dua negara.' },
+                { front: 'Kerja Sama Multilateral', back: 'Kerja sama ekonomi yang melibatkan banyak negara lintas kawasan, contohnya WTO dan G20.' }
+            ],
+            'interaksi-desa-kota': [
+                { front: 'Teori Titik Henti', back: 'Teori yang memperkirakan batas wilayah pengaruh dua pusat kegiatan berdasarkan jarak dan penduduk.' },
+                { front: 'Interaksi Wilayah', back: 'Hubungan saling melengkapi antara desa dan kota karena perbedaan potensi sumber daya.' },
+                { front: 'Alih Fungsi Lahan', back: 'Perubahan lahan pertanian produktif menjadi kawasan permukiman atau industri.' }
+            ],
+            'perdagangan-internasional-kurs': [
+                { front: 'Kurs Valuta Asing', back: 'Nilai tukar mata uang suatu negara terhadap mata uang negara lain.' },
+                { front: 'Neraca Perdagangan', back: 'Selisih antara nilai total ekspor dan impor suatu negara dalam periode tertentu.' },
+                { front: 'Proteksionisme', back: 'Kebijakan pembatasan impor melalui tarif atau kuota untuk melindungi industri dalam negeri.' }
+            ],
+            'koperasi-kewirausahaan-digital': [
+                { front: 'Kewirausahaan', back: 'Kemampuan menciptakan nilai baru melalui pengelolaan sumber daya secara kreatif dan berani mengambil risiko.' },
+                { front: 'UMKM', back: 'Usaha Mikro, Kecil, dan Menengah yang menjadi tulang punggung perekonomian nasional Indonesia.' },
+                { front: 'Ekonomi Digital', back: 'Aktivitas ekonomi yang memanfaatkan platform digital seperti e-commerce dan media sosial.' }
+            ],
+            'proklamasi-mempertahankan-kedaulatan': [
+                { front: 'Proklamasi Kemerdekaan', back: 'Pernyataan kemerdekaan Indonesia oleh Soekarno-Hatta pada 17 Agustus 1945.' },
+                { front: 'Agresi Militer Belanda', back: 'Upaya militer Belanda merebut kembali wilayah Indonesia pasca-proklamasi kemerdekaan.' },
+                { front: 'Konferensi Meja Bundar', back: 'Forum diplomasi di Den Haag tahun 1949 yang mengakhiri sengketa kedaulatan Indonesia-Belanda.' }
+            ],
+            'indonesia-era-reformasi': [
+                { front: 'Reformasi 1998', back: 'Gerakan yang mengakhiri Orde Baru, dipicu krisis moneter dan tuntutan pemberantasan KKN.' },
+                { front: 'Otonomi Daerah', back: 'Kebijakan yang memberi kewenangan lebih besar kepada pemerintah kabupaten/kota mengelola daerahnya.' },
+                { front: 'Demokrasi Pancasila', back: 'Sistem demokrasi Indonesia pasca-reformasi yang menjunjung kebebasan pers dan pemilu langsung.' }
+            ]
+        };
+
+        function FlashcardsGame({ topicId, onComplete }) {
+            const cards = TOPIC_FLASHCARDS[topicId] || [];
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [completed, setCompleted] = useState(false);
+            const [isTransitioning, setIsTransitioning] = useState(false);
+            const transitioningRef = useRef(false); // Ref untuk guard sinkron (state saja tidak cukup cepat untuk menahan klik beruntun)
+
+            if (cards.length === 0) return null;
+
+            const handleNext = () => {
+                if (transitioningRef.current) return; // Cegah klik ganda cepat merusak urutan kartu
+                transitioningRef.current = true;
+                setIsTransitioning(true);
+                setIsFlipped(false);
+                const isLastCard = currentIndex >= cards.length - 1;
+                setTimeout(() => {
+                    if (!isLastCard) {
+                        setCurrentIndex(prev => prev + 1);
+                    } else {
+                        setCompleted(true);
+                        onComplete(30, topicId); // Beri bonus 30 XP (dikurangi jika sudah pernah selesai sebelumnya)
+                    }
+                    transitioningRef.current = false;
+                    setIsTransitioning(false);
+                }, 200);
+            };
+
+            const handleReset = () => {
+                setCurrentIndex(0);
+                setIsFlipped(false);
+                setCompleted(false);
+                transitioningRef.current = false;
+                setIsTransitioning(false);
+            };
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-amber-50 text-amber-600 p-2 rounded-lg"><i data-lucide="layers"></i></div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base">Flashcard Penghafal Istilah</h4>
+                                <p className="text-xs text-slate-500">Klik kartu untuk membalik dan melihat jawaban arti istilah</p>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-400">
+                            {!completed ? `${currentIndex + 1} / ${cards.length}` : "Selesai"}
+                        </span>
+                    </div>
+
+                    {!completed ? (
+                        <div className="space-y-4">
+                            <div 
+                                onClick={() => setIsFlipped(!isFlipped)}
+                                className="h-44 w-full cursor-pointer perspective bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center p-6 text-center select-none relative hover:border-amber-400 transition"
+                            >
+                                <span className="absolute top-2 right-3 text-[10px] text-slate-400 font-semibold">Klik Untuk Balik Kartu 🔄</span>
+                                <div>
+                                    {!isFlipped ? (
+                                        <div>
+                                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-1">Istilah / Konsep</span>
+                                            <h3 className="font-extrabold text-lg text-slate-800">{cards[currentIndex].front}</h3>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Definisi / Arti</span>
+                                            <p className="text-xs text-slate-700 leading-relaxed font-semibold">{cards[currentIndex].back}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <button 
+                                    onClick={handleNext}
+                                    disabled={isTransitioning}
+                                    className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1 cursor-pointer transition shadow-sm"
+                                >
+                                    <span>{currentIndex === cards.length - 1 ? "Selesai Belajar" : "Kartu Berikutnya"}</span>
+                                    <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-6 space-y-3">
+                            <div className="inline-block bg-amber-100 text-amber-600 p-3 rounded-full">🏆</div>
+                            <h5 className="font-bold text-sm text-slate-800">Hebat! Kamu Berhasil Mengingat Istilah</h5>
+                            <p className="text-xs text-slate-500 max-w-xs mx-auto">Membiasakan menghafal istilah penting memperbesar peluang kelulusan nilai ujian IPS!</p>
+                            <button 
+                                onClick={handleReset}
+                                className="border border-slate-200 hover:bg-slate-100 font-bold text-xs py-1.5 px-4 rounded-lg cursor-pointer transition flex items-center gap-1 mx-auto"
+                            >
+                                <span>Ulangi Kembali</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // 4. COMPONENT: OFFLINE IPS GLOSSARY SEARCH WIDGET
+        const GLOSSARY_ITEMS = [
+            { term: 'Zoon Politikon', definition: 'Manusia sebagai makhluk sosial yang secara kodrati selalu membutuhkan interaksi dan hidup berdampingan dengan manusia lainnya.', subject: 'Sosiologi' },
+            { term: 'Asosiatif', definition: 'Bentuk interaksi sosial positif yang mengarah pada kesatuan, persatuan, integrasi, dan pembentukan solidaritas kelompok.', subject: 'Sosiologi' },
+            { term: 'Disosiatif', definition: 'Bentuk interaksi sosial negatif yang mengarah pada kompetisi, kontravensi, pertikaian, perpecahan, atau konflik kepentingan.', subject: 'Sosiologi' },
+            { term: 'Norma Sosial', definition: 'Aturan, pedoman, atau ketentuan yang mengikat perilaku masyarakat agar tercipta keteraturan, ketertiban, dan keadilan umum.', subject: 'Sosiologi' },
+            { term: 'Folkways', definition: 'Norma kebiasaan yang diulang-ulang dalam kehidupan sehari-hari karena dipandang baik (contoh: menyapa orang tua dengan sopan).', subject: 'Sosiologi' },
+            { term: 'Skala Peta', definition: 'Perbandingan matematis antara jarak dua titik pada lembar kertas peta dengan jarak sesungguhnya di lapangan permukaan bumi.', subject: 'Geografi' },
+            { term: 'Penginderaan Jauh', definition: 'Ilmu atau seni mendeteksi dan memperoleh informasi mengenai objek bumi tanpa menyentuh objek fisik tersebut secara langsung (via satelit/sensor).', subject: 'Geografi' },
+            { term: 'Citra Satelit', definition: 'Gambar visual permukaan bumi yang dihasilkan dari pemotretan sensor satelit luar angkasa.', subject: 'Geografi' },
+            { term: 'Geosfer', definition: 'Lapisan-lapisan penyusun bumi yang mencakup litosfer (batuan), atmosfer (udara), hidrosfer (air), biosfer (hayat), dan antroposfer (manusia).', subject: 'Geografi' },
+            { term: 'SIG (Sistem Informasi Geografis)', definition: 'Sistem komputerisasi terintegrasi untuk menyimpan, memanipulasi, menganalisis, dan memetakan data berbasis keruangan atau spasial.', subject: 'Geografi' },
+            { term: 'Kelangkaan (Scarcity)', definition: 'Masalah inti ekonomi di mana jumlah keinginan manusia tidak terbatas, sedangkan sumber daya alam pemuasnya sangat terbatas.', subject: 'Ekonomi' },
+            { term: 'Biaya Peluang', definition: 'Manfaat atau potensi terbaik yang terpaksa dikorbankan demi mengambil satu keputusan ekonomi terpilih dibandingkan opsi lainnya.', subject: 'Ekonomi' },
+            { term: 'Oikonomia', definition: 'Bahasa Yunani kuno asal kata ekonomi, di mana oikos berarti rumah tangga dan nomos berarti aturan/hukum.', subject: 'Ekonomi' },
+            { term: 'Koperasi', definition: 'Badan usaha ekonomi rakyat yang dikelola bersama berasaskan kekeluargaan demi meningkatkan kesejahteraan segenap anggotanya.', subject: 'Ekonomi' },
+            { term: 'BUMN', definition: 'Badan Usaha Milik Negara yang bertugas memproduksi cabang vital ekonomi demi hajat hidup rakyat banyak sekaligus penopang pembangunan.', subject: 'Ekonomi' },
+            { term: 'Praaksara', definition: 'Masa kuno kehidupan manusia purba sebelum mereka mengenal tulisan atau sistem aksara pencatatan sejarah.', subject: 'Sejarah' },
+            { term: 'Nomaden', definition: 'Pola kehidupan masyarakat purba yang berpindah-pindah tempat tinggal karena memburu binatang atau mencari pangan musiman di alam liar.', subject: 'Sejarah' },
+            { term: 'Sedenter', definition: 'Gaya hidup menetap di suatu wilayah perkampungan berkelanjutan karena mulai mahir memproduksi bahan makanan mandiri (bercocok tanam).', subject: 'Sejarah' },
+            { term: 'Prasasti', definition: 'Piagam kuno, maklumat, atau ukiran tulisan resmi pada batu/tembaga peninggalan kerajaan kuno di Nusantara.', subject: 'Sejarah' },
+            { term: 'Purnawarman', definition: 'Raja agung legendaris Kerajaan Tarumanegara Jawa Barat yang terkenal cerdas, berani, serta membangun irigasi saluran Sungai Gomati.', subject: 'Sejarah' },
+            { term: 'Kemiskinan Absolut', definition: 'Kondisi pendapatan seseorang berada di bawah garis kebutuhan minimum untuk hidup layak.', subject: 'Sosiologi' },
+            { term: 'Konflik Sosial', definition: 'Proses pertentangan individu atau kelompok akibat perbedaan kepentingan, tujuan, nilai, atau persepsi.', subject: 'Sosiologi' },
+            { term: 'Integrasi Sosial', definition: 'Proses penyatuan unsur-unsur masyarakat yang berbeda menjadi satu kesatuan yang utuh dan serasi.', subject: 'Sosiologi' },
+            { term: 'Westernisasi', definition: 'Peniruan gaya hidup Barat secara berlebihan tanpa penyaringan nilai budaya lokal sebagai dampak globalisasi.', subject: 'Sosiologi' },
+            { term: 'Kearifan Lokal', definition: 'Nilai luhur yang tumbuh dari interaksi panjang masyarakat dengan lingkungannya, seperti gotong royong dan musyawarah adat.', subject: 'Sosiologi' },
+            { term: 'Urbanisasi', definition: 'Perpindahan penduduk dari desa menuju kota untuk mencari pekerjaan dan kehidupan yang lebih baik.', subject: 'Geografi' },
+            { term: 'Transmigrasi', definition: 'Program pemindahan penduduk dari wilayah padat ke wilayah yang lebih jarang penduduknya demi pemerataan pembangunan.', subject: 'Geografi' },
+            { term: 'Pembangunan Berkelanjutan', definition: 'Prinsip pembangunan yang memenuhi kebutuhan generasi masa kini tanpa mengorbankan kebutuhan generasi mendatang.', subject: 'Geografi' },
+            { term: 'ASEAN', definition: 'Organisasi kerja sama ekonomi regional negara-negara di kawasan Asia Tenggara, termasuk Indonesia.', subject: 'Geografi' },
+            { term: 'Alih Fungsi Lahan', definition: 'Perubahan lahan pertanian produktif menjadi kawasan permukiman atau industri yang dapat mengancam ketahanan pangan.', subject: 'Geografi' },
+            { term: 'Angkatan Kerja', definition: 'Penduduk usia produktif (15-64 tahun) yang sedang bekerja atau sedang aktif mencari pekerjaan.', subject: 'Ekonomi' },
+            { term: 'APBN', definition: 'Anggaran Pendapatan dan Belanja Negara, rencana keuangan tahunan pemerintah pusat Indonesia.', subject: 'Ekonomi' },
+            { term: 'Kurs Valuta Asing', definition: 'Nilai tukar mata uang suatu negara terhadap mata uang negara lain, misalnya Rupiah terhadap Dolar AS.', subject: 'Ekonomi' },
+            { term: 'UMKM', definition: 'Usaha Mikro, Kecil, dan Menengah yang menjadi tulang punggung perekonomian nasional karena menyerap tenaga kerja luas.', subject: 'Ekonomi' },
+            { term: 'Proteksionisme', definition: 'Kebijakan pembatasan impor melalui tarif atau kuota untuk melindungi industri dalam negeri.', subject: 'Ekonomi' },
+            { term: 'VOC', definition: 'Kongsi dagang Belanda (Vereenigde Oostindische Compagnie) yang memonopoli perdagangan rempah-rempah di Nusantara.', subject: 'Sejarah' },
+            { term: 'Tanam Paksa (Cultuurstelsel)', definition: 'Kebijakan kolonial yang mewajibkan rakyat menanam tanaman ekspor demi keuntungan pemerintah Belanda.', subject: 'Sejarah' },
+            { term: 'Sumpah Pemuda', definition: 'Ikrar persatuan pemuda Indonesia pada 28 Oktober 1928: satu tanah air, satu bangsa, dan satu bahasa.', subject: 'Sejarah' },
+            { term: 'Proklamasi Kemerdekaan', definition: 'Pernyataan kemerdekaan Indonesia oleh Soekarno-Hatta pada 17 Agustus 1945 di Jakarta.', subject: 'Sejarah' },
+            { term: 'Reformasi 1998', definition: 'Gerakan yang mengakhiri pemerintahan Orde Baru, dipicu krisis moneter dan tuntutan pemberantasan KKN.', subject: 'Sejarah' }
+        ];
+
+        function IpsGlossary() {
+            const [search, setSearch] = useState('');
+            const [filterTab, setFilterTab] = useState('Semua');
+
+            const filtered = GLOSSARY_ITEMS.filter(item => {
+                const matchesSearch = item.term.toLowerCase().includes(search.toLowerCase()) || 
+                                      item.definition.toLowerCase().includes(search.toLowerCase());
+                const matchesFilter = filterTab === 'Semua' || item.subject === filterTab;
+                return matchesSearch && matchesFilter;
+            });
+
+            return (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="bg-blue-50 text-blue-600 p-2 rounded-lg"><i data-lucide="book-open"></i></div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base">Kamus Glosarium IPS Offline</h4>
+                                <p className="text-xs text-slate-500">Cari & pelajari istilah penting geografi, sosiologi, sejarah & ekonomi</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Cari kata (contoh: Nomaden, Scarcity)..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-4 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg text-[10px] font-bold">
+                        {['Semua', 'Sosiologi', 'Geografi', 'Ekonomi', 'Sejarah'].map(tab => (
+                            <button 
+                                key={tab}
+                                onClick={() => setFilterTab(tab)}
+                                className={`flex-1 py-1 rounded cursor-pointer ${filterTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                        {filtered.length > 0 ? filtered.map((item, idx) => {
+                            let badgeStyle = 'bg-purple-100 text-purple-800';
+                            if (item.subject === 'Geografi') badgeStyle = 'bg-teal-100 text-teal-800';
+                            else if (item.subject === 'Ekonomi') badgeStyle = 'bg-emerald-100 text-emerald-800';
+                            else if (item.subject === 'Sejarah') badgeStyle = 'bg-orange-100 text-orange-800';
+
+                            return (
+                                <div key={idx} className="p-3 bg-slate-50 border border-slate-200/50 rounded-xl space-y-1 text-xs">
+                                    <div className="flex justify-between items-center">
+                                        <strong className="text-slate-800">{item.term}</strong>
+                                        <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded uppercase ${badgeStyle}`}>{item.subject}</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 leading-relaxed">{item.definition}</p>
+                                </div>
+                            );
+                        }) : <p className="text-center text-slate-400 text-xs py-4">Kata tidak ditemukan.</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        // 5. COMPONENT: INTERACTIVE QUIZ GAME 
+        function QuizGame({ quiz, topicTitle, onComplete, onClose }) {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [isAnswered, setIsAnswered] = useState(false);
+            const [score, setScore] = useState(0);
+            const [isFinished, setIsFinished] = useState(false);
+
+            const handleCheck = () => {
+                if (selectedOption === null || isAnswered) return;
+                setIsAnswered(true);
+                if (selectedOption === quiz[currentIndex].correctAnswer) {
+                    setScore(prev => prev + 1);
+                }
+            };
+
+            const handleNext = () => {
+                if (currentIndex < quiz.length - 1) {
+                    setCurrentIndex(prev => prev + 1);
+                    setSelectedOption(null);
+                    setIsAnswered(false);
+                } else {
+                    const pct = Math.round((score / quiz.length) * 100);
+                    const pts = score * 50;
+                    setIsFinished(true);
+                    onComplete(pct, pts);
+                }
+            };
+
+            return (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    {!isFinished ? (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Kuis Evaluasi</span>
+                                    <h4 className="text-xs font-bold text-slate-600 truncate max-w-xs">{topicTitle}</h4>
+                                </div>
+                                <span className="text-xs font-bold text-slate-400">Soal {currentIndex + 1} dari {quiz.length}</span>
+                            </div>
+
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-xs font-semibold leading-relaxed text-slate-800">
+                                {quiz[currentIndex].question}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-2">
+                                {quiz[currentIndex].options.map((opt, idx) => {
+                                    let style = 'border-slate-200 hover:bg-slate-100 text-slate-700';
+                                    if (selectedOption === idx && !isAnswered) {
+                                        style = 'border-blue-500 bg-blue-50 text-blue-700 font-semibold';
+                                    } else if (isAnswered) {
+                                        if (idx === quiz[currentIndex].correctAnswer) {
+                                            style = 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold';
+                                        } else if (selectedOption === idx && idx !== quiz[currentIndex].correctAnswer) {
+                                            style = 'border-red-500 bg-red-50 text-red-800';
+                                        } else {
+                                            style = 'border-slate-100 text-slate-400 bg-slate-50/50';
+                                        }
+                                    }
+                                    return (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => !isAnswered && setSelectedOption(idx)}
+                                            className={`text-left p-3.5 rounded-xl border text-xs cursor-pointer transition ${style}`}
+                                            disabled={isAnswered}
+                                        >
+                                            {opt}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {isAnswered && (
+                                <div className="p-3 bg-slate-100 border border-slate-200 rounded-xl text-[11px] leading-relaxed text-slate-600 space-y-1">
+                                    <strong className="text-slate-800 block">Pembahasan Soal:</strong>
+                                    <p>{quiz[currentIndex].explanation}</p>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                                <button onClick={onClose} className="text-xs font-bold text-slate-400 hover:text-slate-600">Keluar Kuis</button>
+                                {!isAnswered ? (
+                                    <button 
+                                        onClick={handleCheck}
+                                        disabled={selectedOption === null}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-5 rounded-xl cursor-pointer transition disabled:bg-slate-200"
+                                    >
+                                        Periksa Jawaban
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={handleNext}
+                                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-xl cursor-pointer transition"
+                                    >
+                                        {currentIndex === quiz.length - 1 ? "Lihat Hasil" : "Berikutnya"}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-6 space-y-4">
+                            <div className="inline-block bg-yellow-400 text-white p-3.5 rounded-full shadow-lg text-lg">🏆</div>
+                            <div className="space-y-1">
+                                <h4 className="font-extrabold text-slate-800 text-base">Selamat, Kuis Selesai!</h4>
+                                <p className="text-xs text-slate-500">Materi evaluasi mandiri selesai dipelajari.</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto p-3 bg-white border border-slate-100 rounded-xl">
+                                <div className="text-center border-r border-slate-100">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Nilai</span>
+                                    <span className="text-xl font-black text-blue-600">{Math.round((score / quiz.length) * 100)}%</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Bonus Poin</span>
+                                    <span className="text-xl font-black text-amber-500">+{score * 50} XP</span>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-6 rounded-xl cursor-pointer transition">
+                                Selesai Belajar
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // 6. MAIN APP COMPONENT
+        function App() {
+            const [layer, setLayer] = useState('landing'); // landing, grades, subjects, topics, study
+            const [selectedGrade, setSelectedGrade] = useState('X');
+            const [selectedSubject, setSelectedSubject] = useState(null);
+            const [selectedTopic, setSelectedTopic] = useState(null);
+            const [activeQuiz, setActiveQuiz] = useState(null);
+            const [isSpeaking, setIsSpeaking] = useState(false);
+
+            const [progress, setProgress] = useState({
+                completedTopics: [],
+                quizScores: {},
+                completedFlashcards: [],
+                points: 100
+            });
+
+            useEffect(() => {
+                try {
+                    const saved = localStorage.getItem('ips_harapan_siswa_progress');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        // Merge dengan default agar data lama (sebelum fitur baru ditambahkan) tetap kompatibel
+                        setProgress(prev => ({ ...prev, ...parsed }));
+                    }
+                } catch (e) {
+                    console.warn('Progress belajar tersimpan tidak dapat dibaca, memulai dari awal.', e);
+                }
+            }, []);
+
+            useEffect(() => {
+                // Instantly sync Lucide icons on DOM updates
+                try {
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.warn('Ikon Lucide gagal dimuat (kemungkinan tidak ada koneksi internet).', e);
+                }
+            });
+
+            const saveProgress = (newProg) => {
+                setProgress(newProg);
+                try {
+                    localStorage.setItem('ips_harapan_siswa_progress', JSON.stringify(newProg));
+                } catch (e) {
+                    console.warn('Progress belajar tidak dapat disimpan secara permanen di perangkat ini.', e);
+                }
+            };
+
+            const handleCompleteQuiz = (scorePct, ptsEarned) => {
+                if (!selectedTopic) return;
+                const completed = progress.completedTopics.includes(selectedTopic.id);
+                const updatedCompleted = completed ? progress.completedTopics : [...progress.completedTopics, selectedTopic.id];
+                const high = progress.quizScores[selectedTopic.id] || 0;
+                const updatedScores = { ...progress.quizScores, [selectedTopic.id]: Math.max(high, scorePct) };
+                
+                saveProgress({
+                    ...progress,
+                    completedTopics: updatedCompleted,
+                    quizScores: updatedScores,
+                    points: progress.points + (completed ? Math.round(ptsEarned / 2) : ptsEarned)
+                });
+            };
+
+            const handleCompleteFlash = (pts, topicId) => {
+                const currentList = progress.completedFlashcards || [];
+                const alreadyClaimed = currentList.includes(topicId);
+                saveProgress({
+                    ...progress,
+                    completedFlashcards: alreadyClaimed ? currentList : [...currentList, topicId],
+                    points: progress.points + (alreadyClaimed ? Math.round(pts / 3) : pts)
+                });
+            };
+
+            const toggleSpeech = (text) => {
+                if ('speechSynthesis' in window) {
+                    if (isSpeaking) {
+                        window.speechSynthesis.cancel();
+                        setIsSpeaking(false);
+                    } else {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'id-ID';
+                        utterance.rate = 0.95;
+                        utterance.onend = () => setIsSpeaking(false);
+                        utterance.onerror = () => setIsSpeaking(false);
+                        setIsSpeaking(true);
+                        window.speechSynthesis.speak(utterance);
+                    }
+                } else {
+                    alert('Layanan narator suara tidak didukung di komputer Anda.');
+                }
+            };
+
+            const resetProgress = () => {
+                if (confirm('Apakah Anda yakin ingin mengulang progress belajar dari awal?')) {
+                    saveProgress({ completedTopics: [], quizScores: {}, completedFlashcards: [], points: 100 });
+                }
+            };
+
+            const getSubjectProgress = (sub) => {
+                if (!sub.topics || sub.topics.length === 0) return 0;
+                const completed = sub.topics.filter(t => progress.completedTopics.includes(t.id)).length;
+                return Math.round((completed / sub.topics.length) * 100);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col">
+                    {/* Header bar */}
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 py-3 shadow-sm">
+                        <div className="max-w-7xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {layer !== 'landing' && (
+                                    <button 
+                                        onClick={() => {
+                                            if (layer === 'study') { setLayer('topics'); setActiveQuiz(null); if('speechSynthesis' in window) window.speechSynthesis.cancel(); setIsSpeaking(false); }
+                                            else if (layer === 'topics') setLayer('subjects');
+                                            else if (layer === 'subjects') setLayer('grades');
+                                            else if (layer === 'grades') setLayer('landing');
+                                        }}
+                                        className="hover:bg-slate-100 p-2 rounded-full border border-slate-200 transition cursor-pointer"
+                                    >
+                                        <i data-lucide="chevron-left" className="w-4 h-4 text-slate-600"></i>
+                                    </button>
+                                )}
+                                <div>
+                                    <h1 className="font-extrabold text-base md:text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
+                                        <span className="text-xl">🎓</span>
+                                        <span>IPS Harapan Siswa</span>
+                                    </h1>
+                                    <p className="text-[10px] text-slate-400 hidden sm:block">SMK Harapan Siswa Bogor • Media Belajar Mandiri</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs font-bold">
+                                <div className="bg-amber-50 border border-amber-100 text-amber-900 rounded-full py-1 px-3 flex items-center gap-1">
+                                    ⭐ <span>{progress.points} XP</span>
+                                </div>
+                                <div className="bg-blue-50 border border-blue-100 text-blue-900 rounded-full py-1 px-3 flex items-center gap-1">
+                                    🏆 <span>Selesai: {progress.completedTopics.length}/{TOTAL_TOPICS_ALL_GRADES} Topik</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Area */}
+                    <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+                        {/* LANDING PAGE */}
+                        {layer === 'landing' && (
+                            <div className="space-y-12 py-6 md:py-12">
+                                <div className="text-center space-y-4 max-w-2xl mx-auto">
+                                    <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Kurikulum Merdeka SMK</span>
+                                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Platform Belajar IPS<br/><span className="text-blue-600">Jadi Lebih Mudah!</span></h2>
+                                    <p className="text-xs md:text-sm text-slate-500 leading-relaxed max-w-lg mx-auto">Selamat datang di media pembelajaran IPS resmi SMK Harapan Siswa Bogor. Tingkatkan wawasanmu lewat kuis seru, peta konsep interaktif, flashcards hafalan istilah, dan kamus glosarium IPS!</p>
+                                    <button 
+                                        onClick={() => setLayer('grades')}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs md:text-sm py-3 px-8 rounded-xl transition shadow-lg cursor-pointer inline-flex items-center gap-2"
+                                    >
+                                        <span>Mulai Belajar Sekarang</span>
+                                        <i data-lucide="arrow-right" className="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pt-4">
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">📖</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Materi Lengkap SMK</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Mencakup 4 pilar IPS utama: Geografi, Sejarah Indonesia, Ekonomi, dan Sosiologi yang disesuaikan khusus siswa SMK.</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">🎮</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Gamifikasi Kuis & Flashcards</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Asah daya ingatmu lewat kuis interaktif dengan pembahasan instan dan kartu pintar penghafal istilah praktis.</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                                        <span className="text-xl">📊</span>
+                                        <h3 className="font-bold text-slate-800 text-sm">Peta Konsep & Glosarium</h3>
+                                        <p className="text-xs text-slate-500 leading-relaxed">Mudahkan pemahaman materi abstrak lewat infografis bagan visual dan kamus glosarium istilah IPS terlengkap.</p>
+                                    </div>
+                                </div>
+
+                                <div className="max-w-4xl mx-auto pt-6 border-t border-slate-200 space-y-4">
+                                    <h4 className="text-center font-extrabold text-slate-900 text-base md:text-lg">Kamus Glosarium Istilah IPS Bawaan</h4>
+                                    <IpsGlossary />
+                                </div>
+
+                                {progress.completedTopics.length > 0 && (
+                                    <div className="text-center"><button onClick={resetProgress} className="text-[11px] text-slate-400 hover:text-red-500 underline cursor-pointer">Reset Semua Progress Belajar</button></div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* GRADE SELECTION */}
+                        {layer === 'grades' && (
+                            <div className="space-y-6 max-w-2xl mx-auto">
+                                <div className="text-center space-y-1">
+                                    <h2 className="text-lg md:text-xl font-extrabold text-slate-900">Pilih Tingkat Kelas</h2>
+                                    <p className="text-xs text-slate-500">Akses silabus materi sesuai tingkatan pendidikan Anda</p>
+                                </div>
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={() => { setSelectedGrade('X'); setLayer('subjects'); }}
+                                        className="w-full bg-white p-5 rounded-2xl border-2 border-blue-500 text-left hover:shadow-md transition flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-blue-600 text-white p-3 rounded-xl">📖</div>
+                                            <div>
+                                                <strong className="text-slate-800 block text-sm">Kelas X (Sepuluh)</strong>
+                                                <span className="text-xs text-slate-500">4 Disiplin Ilmu • 8 Materi Pokok SMK Lengkap</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-blue-50 text-blue-600 p-2 rounded-full">➡️</div>
+                                    </button>
+                                    <button 
+                                        onClick={() => { setSelectedGrade('XI'); setLayer('subjects'); }}
+                                        className="w-full bg-white p-5 rounded-2xl border-2 border-indigo-500 text-left hover:shadow-md transition flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-indigo-600 text-white p-3 rounded-xl">📘</div>
+                                            <div>
+                                                <strong className="text-slate-800 block text-sm">Kelas XI (Sebelas)</strong>
+                                                <span className="text-xs text-slate-500">4 Disiplin Ilmu • 8 Materi Pokok SMK Lengkap</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-indigo-50 text-indigo-600 p-2 rounded-full">➡️</div>
+                                    </button>
+                                    <button 
+                                        onClick={() => { setSelectedGrade('XII'); setLayer('subjects'); }}
+                                        className="w-full bg-white p-5 rounded-2xl border-2 border-rose-500 text-left hover:shadow-md transition flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-rose-600 text-white p-3 rounded-xl">🎓</div>
+                                            <div>
+                                                <strong className="text-slate-800 block text-sm">Kelas XII (Duabelas)</strong>
+                                                <span className="text-xs text-slate-500">4 Disiplin Ilmu • 8 Materi Pokok Persiapan Kelulusan</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-rose-50 text-rose-600 p-2 rounded-full">➡️</div>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUBJECT SELECTION */}
+                        {layer === 'subjects' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg md:text-xl font-extrabold text-slate-900">Mata Pelajaran - {GRADE_LABELS[selectedGrade]}</h2>
+                                    <p className="text-xs text-slate-500">Pilih salah satu cabang pilar keilmuan IPS di bawah ini</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {IPS_DATA[selectedGrade].map((sub) => {
+                                        const pct = getSubjectProgress(sub);
+                                        return (
+                                            <button 
+                                                key={sub.id}
+                                                onClick={() => { setSelectedSubject(sub); setLayer('topics'); }}
+                                                className="bg-white rounded-2xl border border-slate-200 text-left overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col"
+                                            >
+                                                <div className={`p-4 ${sub.headerColor} text-white flex justify-between items-center`}>
+                                                    <strong className="text-sm font-black uppercase tracking-wider">{sub.name}</strong>
+                                                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">{sub.topics.length} Materi</span>
+                                                </div>
+                                                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] font-bold text-slate-400 block uppercase">Sub-Topik Bahasan:</span>
+                                                        <ul className="text-xs text-slate-600 list-disc list-inside space-y-0.5">
+                                                            {sub.topics.map((t, idx) => <li key={idx} className="truncate">{t.title}</li>)}
+                                                        </ul>
+                                                    </div>
+                                                    <div className="pt-3 border-t border-slate-100 space-y-1">
+                                                        <div className="flex justify-between text-[10px] font-extrabold text-slate-500">
+                                                            <span>Selesai Belajar</span>
+                                                            <span>{pct}%</span>
+                                                        </div>
+                                                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-blue-600" style={{ width: `${pct}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="pt-6 border-t border-slate-200">
+                                    <IpsGlossary />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TOPIC SELECTION */}
+                        {layer === 'topics' && selectedSubject && (
+                            <div className="space-y-6 max-w-2xl mx-auto">
+                                <div className={`p-6 rounded-2xl ${selectedSubject.headerColor} text-white space-y-2`}>
+                                    <span className="text-[10px] bg-white/25 px-2.5 py-0.5 rounded-full font-extrabold uppercase">{selectedSubject.name} - Kelas {selectedGrade}</span>
+                                    <h2 className="text-xl md:text-2xl font-black">{selectedSubject.topics.length} Materi Pembelajaran</h2>
+                                    <div className="space-y-1 max-w-xs pt-1">
+                                        <div className="flex justify-between text-xs font-semibold">
+                                            <span>Progress Pembelajaran:</span>
+                                            <span>{getSubjectProgress(selectedSubject)}%</span>
+                                        </div>
+                                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                                            <div className="h-full bg-white" style={{ width: `${getSubjectProgress(selectedSubject)}%` }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-bold text-slate-400 block uppercase">Daftar Modul Materi Pembelajaran:</span>
+                                    {selectedSubject.topics.map((topic, idx) => {
+                                        const comp = progress.completedTopics.includes(topic.id);
+                                        const score = progress.quizScores[topic.id];
+                                        return (
+                                            <button 
+                                                key={topic.id}
+                                                onClick={() => { setSelectedTopic(topic); setLayer('study'); }}
+                                                className="w-full bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-400 text-left transition flex items-center justify-between cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${comp ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                        {comp ? "✅" : idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-800 text-xs md:text-sm">{topic.title}</h4>
+                                                        <p className="text-[10px] text-slate-400 mt-0.5">Estimasi Durasi: {topic.duration} • 3 Soal Kuis</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {comp && <span className="text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">Skor: {score}%</span>}
+                                                    <span className={`text-[10px] font-black py-1 px-3.5 rounded-lg ${comp ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white'}`}>{comp ? "Tinjau" : "Mulai"}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* INTERACTIVE STUDY CORE */}
+                        {layer === 'study' && selectedSubject && selectedTopic && (
+                            <div className="space-y-6">
+                                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs md:text-sm font-semibold">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-slate-400">Kelas {selectedGrade}</span>
+                                        <span className="text-slate-300">/</span>
+                                        <span className="text-slate-500">{selectedSubject.name}</span>
+                                        <span className="text-slate-300">/</span>
+                                        <strong className="text-blue-600 truncate max-w-xs">{selectedTopic.title}</strong>
+                                    </div>
+                                    <button 
+                                        onClick={() => setActiveQuiz(activeQuiz ? null : selectedTopic)}
+                                        className="bg-blue-600 text-white font-extrabold text-[11px] py-1.5 px-4 rounded-xl cursor-pointer hover:bg-blue-700 transition"
+                                    >
+                                        {activeQuiz ? "Kembali Membaca Materi" : "Uji Pemahaman (Kuis)"}
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                    {/* Left Article reading */}
+                                    <div className="lg:col-span-7 space-y-6">
+                                        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                                            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                                                <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded uppercase">Modul {selectedSubject.name}</span>
+                                                <span className="text-[11px] text-slate-400 font-medium">Baca: {selectedTopic.duration}</span>
+                                            </div>
+
+                                            <h2 className="text-lg md:text-xl font-black text-slate-900 leading-tight">{selectedTopic.title}</h2>
+
+                                            {/* Offline TTS speech voice */}
+                                            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg">🗣️</span>
+                                                    <div>
+                                                        <strong className="text-slate-800 block">Narator Suara Otomatis</strong>
+                                                        <span className="text-[10px] text-slate-400">Dengar materi via audio robot browser (Offline)</span>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => toggleSpeech(selectedTopic.content.join(' '))}
+                                                    className={`py-1 px-3 rounded-lg font-bold border transition cursor-pointer ${isSpeaking ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}
+                                                >
+                                                    {isSpeaking ? "Berhenti" : "Dengarkan"}
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-4 text-xs md:text-sm text-slate-700 leading-relaxed text-justify">
+                                                {selectedTopic.content.map((p, i) => <p key={i} className="indent-5">{p}</p>)}
+                                            </div>
+
+                                            {progress.completedTopics.includes(selectedTopic.id) && (
+                                                <div className="bg-emerald-50 border border-emerald-100 text-emerald-900 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                                                    <span>✅</span>
+                                                    <span>Luar biasa! Kamu sudah lulus kuis materi pembelajaran ini!</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <TopicVisualizer topicId={selectedTopic.id} />
+                                    </div>
+
+                                    {/* Right Quiz & Cards side decks */}
+                                    <div className="lg:col-span-5 space-y-6">
+                                        {activeQuiz ? (
+                                            <QuizGame 
+                                                quiz={selectedTopic.quiz}
+                                                topicTitle={selectedTopic.title}
+                                                onComplete={handleCompleteQuiz}
+                                                onClose={() => setActiveQuiz(null)}
+                                            />
+                                        ) : (
+                                            <div className="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-lg space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span>💡</span>
+                                                    <strong className="text-sm font-black block">Mulai Kuis Sekarang!</strong>
+                                                </div>
+                                                <p className="text-[11px] text-slate-300 leading-relaxed">Uji pemahaman belajarmu dengan kuis interaktif 3 pertanyaan pilihan ganda disertai pembahasan lengkap demi memperoleh tambahan <strong>+50 XP</strong>!</p>
+                                                <button 
+                                                    onClick={() => setActiveQuiz(selectedTopic)}
+                                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs py-2 px-4 rounded-xl cursor-pointer transition shadow-md"
+                                                >
+                                                    Mulai Kuis Interaktif
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <FlashcardsGame 
+                                            topicId={selectedTopic.id}
+                                            onComplete={handleCompleteFlash}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer bar */}
+                    <footer className="bg-slate-950 text-slate-500 py-6 px-4 mt-12 border-t border-slate-900 text-center text-[11px] space-y-1.5">
+                        <strong className="text-slate-400 block">© 2026 SMK Harapan Siswa Bogor</strong>
+                        <p className="max-w-md mx-auto text-slate-600 leading-relaxed">Media pembelajaran digital IPS kelas X mandiri dengan kuis interaktif, flashcards, dan infografis. Berjalan 100% offline & client-side.</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Render React App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
